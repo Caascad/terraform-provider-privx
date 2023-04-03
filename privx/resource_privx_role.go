@@ -117,6 +117,7 @@ func resourcePrivxRoleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("permissions") || d.HasChange("access_group_id") || d.HasChange("permissions") {
 		var role = rolestore.Role{
+			ID:            d.Get("id").(string),
 			Name:          d.Get("name").(string),
 			Comment:       d.Get("comment").(string),
 			PermitAgent:   d.Get("permit_agent").(bool),

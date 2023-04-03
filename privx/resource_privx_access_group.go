@@ -40,7 +40,7 @@ func resourcePrivXAccessGroup() *schema.Resource {
 			},
 			"ca_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"created": {
 				Type:     schema.TypeString,
@@ -68,18 +68,17 @@ func resourcePrivxAccessGroupCreate(ctx context.Context, d *schema.ResourceData,
 	var access_group = authorizer.AccessGroup{
 		Name:    d.Get("name").(string),
 		Comment: d.Get("comment").(string),
-		CAID:    d.Get("ca_id").(string),
 	}
 
-	new_extender_id, err := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector).CreateAccessGroup(&access_group)
+	new_access_group_id, err := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector).CreateAccessGroup(&access_group)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorAccessGroupCreate, new_extender_id, err))
+		return diag.FromErr(fmt.Errorf(errorAccessGroupCreate, new_access_group_id, err))
 	}
 
 	d.SetId(new_access_group_id)
 
-	return resourcePrivxAccessGroupRead(ctx, d, meta) //AccessGroup API read gives less attributes than needed for extender creation
+	return resourcePrivxAccessGroupRead(ctx, d, meta)
 }
 
 func resourcePrivxAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -119,11 +118,15 @@ func resourcePrivxAccessGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePrivxAccessGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("ca_id") {
+	if d.HasChange("name") || d.HasChange("comment") {
 		var access_group = authorizer.AccessGroup{
-			Name:    d.Get("name").(string),
-			Comment: d.Get("comment").(string),
-			CAID:    d.Get("ca_id").(string),
+			Name:      d.Get("name").(string),
+			Comment:   d.Get("comment").(string),
+			CAID:      d.Get("ca_id").(string),
+			Author:    d.Get("author").(string),
+			Created:   d.Get("created").(string),
+			Updated:   d.Get("updated").(string),
+			UpdatedBy: d.Get("updated_by").(string),
 		}
 		err := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector).UpdateAccessGroup(d.Get("id").(string), &access_group)
 		if err != nil {
