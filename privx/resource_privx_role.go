@@ -30,10 +30,6 @@ func resourcePrivXRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"access_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -42,17 +38,18 @@ func resourcePrivXRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"permit_agent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"access_group_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"source_rules": {
-				Type:     schema.TypeList,
-				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -65,9 +62,12 @@ func resourcePrivxRoleCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var new_role_id string
 
 	var role = rolestore.Role{
-		Name:        d.Get("name").(string),
-		Permissions: flattenSimpleSlice(d.Get("permissions").([]interface{})),
-		SourceRule:  d.Get("source_rules").(rolestore.SourceRule),
+		Name:          d.Get("name").(string),
+		Comment:       d.Get("comment").(string),
+		PermitAgent:   d.Get("permit_agent").(bool),
+		AccessGroupID: d.Get("access_group_id").(string),
+		Permissions:   flattenSimpleSlice(d.Get("permissions").([]interface{})),
+		SourceRule:    rolestore.SourceRuleNone(), // Creates an empty mapping, till we know if we need this.
 	}
 
 	new_role_id, err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).CreateRole(role)
@@ -94,16 +94,35 @@ func resourcePrivxRoleRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
 	}
 
+	if err := d.Set("comment", role.Comment); err != nil {
+		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
+	}
+
+	if err := d.Set("permit_agent", role.PermitAgent); err != nil {
+		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
+	}
+
+	if err := d.Set("access_group_id", role.AccessGroupID); err != nil {
+		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
+	}
+
+	if err := d.Set("permissions", role.Permissions); err != nil {
+		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
+	}
+
 	return nil
 }
 
 func resourcePrivxRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	if d.HasChange("name") || d.HasChange("source_rules") || d.HasChange("") { //Routing_prefix is not handled by SDK.
+	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("permissions") || d.HasChange("access_group_id") || d.HasChange("permissions") {
 		var role = rolestore.Role{
-			Name:       d.Get("name").(string),
-			SourceRule: d.Get("source_rules").(rolestore.SourceRule),
-			Comment:    d.Get("comment").(string),
+			Name:          d.Get("name").(string),
+			Comment:       d.Get("comment").(string),
+			PermitAgent:   d.Get("permit_agent").(bool),
+			AccessGroupID: d.Get("access_group_id").(string),
+			Permissions:   flattenSimpleSlice(d.Get("permissions").([]interface{})),
+			SourceRule:    rolestore.SourceRuleNone(),
 		}
 		err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).UpdateRole(d.Get("id").(string), &role)
 		if err != nil {
@@ -115,7 +134,7 @@ func resourcePrivxRoleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourcePrivxRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	err := createUserStoreClient(ctx, meta.(privx_API_client_connector).Connector).DeleteTrustedClient(d.Get("id").(string))
+	err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).DeleteRole(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorRoleDelete, d.Id(), err))
 	}
@@ -133,3 +152,28 @@ func findRoleIndex(mySlice []rolestore.Role, id string) int {
 	}
 	return -1
 }
+
+/* Here lies the definition of a source_rules of type single for potential later use.
+
+"source_rules": {
+	Type:     schema.TypeList,
+	Required: true,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"source": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"search_string": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
+	},
+},
+
+*/
