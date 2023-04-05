@@ -87,14 +87,6 @@ func resourcePrivXExtender() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"subnets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 		},
 	}
 }
