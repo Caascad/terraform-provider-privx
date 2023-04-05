@@ -71,9 +71,10 @@ func Provider() *schema.Provider {
 
 func getDataSourcesMap() map[string]*schema.Resource {
 	dataSourcesMap := map[string]*schema.Resource{
-		"extenders":     dataSourcePrivxExtender(),
-		"roles":         dataSourcePrivxRoles(),
-		"access_groups": dataSourcePrivxAccessGroups(),
+		"extenders":            dataSourcePrivxExtender(),
+		"roles":                dataSourcePrivxRoles(),
+		"access_groups":        dataSourcePrivxAccessGroups(),
+		"extender_config_file": dataSourcePrivxExtenderConfig(),
 	}
 	return dataSourcesMap
 }
