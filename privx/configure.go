@@ -10,6 +10,7 @@ import (
 	"github.com/SSHcom/privx-sdk-go/api/authorizer"
 	"github.com/SSHcom/privx-sdk-go/api/rolestore"
 	"github.com/SSHcom/privx-sdk-go/api/userstore"
+	"github.com/SSHcom/privx-sdk-go/api/vault"
 	"github.com/SSHcom/privx-sdk-go/oauth"
 	"github.com/SSHcom/privx-sdk-go/restapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -95,4 +96,8 @@ func createUserStoreClient(ctx context.Context, connector restapi.Connector) *us
 
 func createRoleClient(ctx context.Context, connector restapi.Connector) *rolestore.RoleStore {
 	return rolestore.New(connector)
+}
+
+func createVaultClient(ctx context.Context, connector restapi.Connector) *vault.Vault {
+	return vault.New(connector)
 }

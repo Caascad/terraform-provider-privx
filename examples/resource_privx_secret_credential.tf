@@ -7,10 +7,11 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "extenders" "extenders_list" {
+resource "secret_credential" "monpremiersecret" {
   provider = privx
-}
-
-output "extenders" {
-  value=data.extenders.extenders_list
+  name = "" //credential name, used as ID.
+  user = "" //credential user
+  pass = "" //credential password
+  read_roles = [""] // List of roles id
+  write_roles = [""] // List of roles id
 }
