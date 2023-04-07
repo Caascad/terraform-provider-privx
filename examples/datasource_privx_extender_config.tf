@@ -7,10 +7,11 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "extenders" "extenders_list" {
+data "extender_config" "conf_extender" {
   provider = privx
+  trusted_client_id = ""
 }
 
-output "extenders" {
-  value=data.extenders.extenders_list
+output "extender_conf" {
+  value=data.extender_config.conf_extender
 }

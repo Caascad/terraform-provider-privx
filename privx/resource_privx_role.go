@@ -78,7 +78,7 @@ func resourcePrivxRoleCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(new_role_id)
 
-	return resourcePrivxRoleRead(ctx, d, meta) //Role API read gives less attributes than needed for extender creation
+	return resourcePrivxRoleRead(ctx, d, meta)
 }
 
 func resourcePrivxRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

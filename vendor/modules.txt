@@ -7,6 +7,7 @@ github.com/BurntSushi/toml/internal
 github.com/SSHcom/privx-sdk-go/api/authorizer
 github.com/SSHcom/privx-sdk-go/api/rolestore
 github.com/SSHcom/privx-sdk-go/api/userstore
+github.com/SSHcom/privx-sdk-go/api/vault
 github.com/SSHcom/privx-sdk-go/oauth
 github.com/SSHcom/privx-sdk-go/pkce
 github.com/SSHcom/privx-sdk-go/restapi

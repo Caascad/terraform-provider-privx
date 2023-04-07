@@ -13,12 +13,14 @@ Each ressources and datasources usage is described in examples in the ./examples
 Hereafter the actual objects handled by the provider.
 
 ### Ressource :
+ - Access Group
  - Trusted-Client : Extender Type
  - Role
- - Access Group
+ - Secret type credentials
 
 ### Datasources :
  - Access Groups
  - Extenders
+ - Extender Config
  - Roles
 
