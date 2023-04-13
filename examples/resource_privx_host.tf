@@ -7,12 +7,16 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "extender" "myfirstextender" {
-  provider = privx
+resource "host" "myfirsthost" {
+  provider=privx
+  access_group_id = ""
+  external_id = ""
+  instance_id = ""
+  source_id = ""
   name = ""
-  type = "EXTENDER" /*Constant*/
-  web_proxy_port = 0
-  web_proxy_address = ""
-  routing_prefix = ""
-  group_id = ""
+  contact_adress = ""
+  cloud_provider = ""
+  cloud_provider_region = ""
+  tags = [""]
+  addresses = [""]
 }
