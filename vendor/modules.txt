@@ -5,6 +5,7 @@ github.com/BurntSushi/toml/internal
 # github.com/SSHcom/privx-sdk-go v1.26.0
 ## explicit; go 1.18
 github.com/SSHcom/privx-sdk-go/api/authorizer
+github.com/SSHcom/privx-sdk-go/api/hoststore
 github.com/SSHcom/privx-sdk-go/api/rolestore
 github.com/SSHcom/privx-sdk-go/api/userstore
 github.com/SSHcom/privx-sdk-go/api/vault

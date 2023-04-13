@@ -14,9 +14,10 @@ Hereafter the actual objects handled by the provider.
 
 ### Ressource :
  - Access Group
- - Trusted-Client : Extender Type
+ - Host
  - Role
  - Secret type credentials
+ - Trusted-Client : Extender Type
 
 ### Datasources :
  - Access Groups

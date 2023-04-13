@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/SSHcom/privx-sdk-go/api/authorizer"
+	"github.com/SSHcom/privx-sdk-go/api/hoststore"
 	"github.com/SSHcom/privx-sdk-go/api/rolestore"
 	"github.com/SSHcom/privx-sdk-go/api/userstore"
 	"github.com/SSHcom/privx-sdk-go/api/vault"
@@ -86,18 +87,30 @@ func flattenSimpleSlice(slice []interface{}) []string {
 	return results
 }
 
+/*
+--------------------------------------------
+Functions to instanciate privx object/endpoint API Client.
+*/
 func createAuthorizerClient(ctx context.Context, connector restapi.Connector) *authorizer.Client {
 	return authorizer.New(connector)
 }
 
-func createUserStoreClient(ctx context.Context, connector restapi.Connector) *userstore.UserStore {
-	return userstore.New(connector)
+func createHostClient(ctx context.Context, connector restapi.Connector) *hoststore.HostStore {
+	return hoststore.New(connector)
 }
 
 func createRoleClient(ctx context.Context, connector restapi.Connector) *rolestore.RoleStore {
 	return rolestore.New(connector)
 }
 
+func createUserStoreClient(ctx context.Context, connector restapi.Connector) *userstore.UserStore {
+	return userstore.New(connector)
+}
+
 func createVaultClient(ctx context.Context, connector restapi.Connector) *vault.Vault {
 	return vault.New(connector)
 }
+
+/*
+--------------------------------------------
+*/
