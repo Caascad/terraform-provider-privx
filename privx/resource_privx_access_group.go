@@ -2,7 +2,9 @@ package privx
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/SSHcom/privx-sdk-go/api/authorizer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,7 +25,7 @@ func resourcePrivXAccessGroup() *schema.Resource {
 		UpdateContext: resourcePrivxAccessGroupUpdate,
 		DeleteContext: resourcePrivxAccessGroupDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourcePrivXAccessGroupImportState,
 		},
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -83,7 +85,7 @@ func resourcePrivxAccessGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePrivxAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	/*Get AccessGroup List*/
-	access_groups_list, err := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector).AccessGroups(0, 100000, "id", "ASC")
+	access_groups_list, err := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector).AccessGroups(0, 1000, "id", "ASC")
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorAccessGroupRead, d.Id(), err))
@@ -146,6 +148,45 @@ func resourcePrivxAccessGroupDelete(ctx context.Context, d *schema.ResourceData,
 	d.SetId("")
 
 	return nil
+}
+
+func resourcePrivXAccessGroupImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := createAuthorizerClient(ctx, meta.(privx_API_client_connector).Connector)
+
+	parts := strings.SplitN(d.Id(), "-", -1)
+	if len(parts) != 5 {
+		return nil, errors.New("import format error: invalid privx access group ID")
+	}
+
+	access_group, err := conn.AccessGroup(d.Id())
+	if err != nil {
+		return nil, fmt.Errorf("couldn't import access group %s, %v", d.Id(), err)
+	}
+
+	if err := d.Set("name", access_group.Name); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+
+	if err := d.Set("comment", access_group.Comment); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+	if err := d.Set("ca_id", access_group.CAID); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+	if err := d.Set("created", access_group.Created); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+	if err := d.Set("updated", access_group.Updated); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+	if err := d.Set("updated_by", access_group.UpdatedBy); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+	if err := d.Set("author", access_group.Author); err != nil {
+		return nil, fmt.Errorf(errorAccessGroupRead, d.Id(), err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func findAccessGroupIndex(mySlice []authorizer.AccessGroup, id string) int {
