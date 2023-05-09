@@ -2,7 +2,9 @@ package privx
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/SSHcom/privx-sdk-go/api/userstore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,7 +25,7 @@ func resourcePrivXExtender() *schema.Resource {
 		UpdateContext: resourcePrivxExtenderUpdate,
 		DeleteContext: resourcePrivxExtenderDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourcePrivXExtenderImportState,
 		},
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -191,6 +193,53 @@ func resourcePrivxExtenderDelete(ctx context.Context, d *schema.ResourceData, me
 	d.SetId("")
 
 	return nil
+}
+
+func resourcePrivXExtenderImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := createUserStoreClient(ctx, meta.(privx_API_client_connector).Connector)
+
+	parts := strings.SplitN(d.Id(), "-", -1)
+	if len(parts) != 5 {
+		return nil, errors.New("import format error: invalid privx extender ID")
+	}
+
+	extender, err := conn.TrustedClient(d.Id())
+	if err != nil {
+		return nil, fmt.Errorf("couldn't import extender %s, %v", d.Id(), err)
+	}
+
+	if err := d.Set("secret", extender.Secret); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("name", extender.Name); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("enabled", extender.Enabled); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("registered", extender.Registered); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("type", extender.Type); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("extender_address", extender.ExtenderAddress); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("permissions", extender.Permissions); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("web_proxy_address", extender.WebProxyAddress); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 func findExtenderIndex(mySlice []userstore.TrustedClient, id string) int {

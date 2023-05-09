@@ -60,7 +60,7 @@ func dataSourcePrivxAccessGroups() *schema.Resource {
 }
 
 func listAccessGroups(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	access_groups_list, err := authorizer.New(meta.(privx_API_client_connector).Connector).AccessGroups(0, 100000, "id", "ASC")
+	access_groups_list, err := authorizer.New(meta.(privx_API_client_connector).Connector).AccessGroups(0, 1000, "id", "ASC")
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error setting API Client: %s", err))
