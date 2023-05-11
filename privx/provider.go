@@ -13,7 +13,7 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"privx_api_client_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"PRIVX_API_CLIENT_ID",
 				}, ""),
@@ -21,7 +21,7 @@ func Provider() *schema.Provider {
 			},
 			"privx_api_client_secret": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"PRIVX_API_CLIENT_SECRET",
 				}, ""),
@@ -30,7 +30,7 @@ func Provider() *schema.Provider {
 			},
 			"privx_oauth_client_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"PRIVX_OAUTH_CLIENT_ID",
 				}, ""),
@@ -38,11 +38,20 @@ func Provider() *schema.Provider {
 			},
 			"privx_oauth_client_secret": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"PRIVX_OAUTH_CLIENT_SECRET",
 				}, ""),
 				Description: "Privx API Oauth Client Secret",
+				Sensitive:   true,
+			},
+			"privx_api_bearer_token": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"PRIVX_API_BEARER_TOKEN",
+				}, ""),
+				Description: "PrivX bearer token",
 				Sensitive:   true,
 			},
 			"privx_api_base_url": {
@@ -97,6 +106,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		api_client_id:       d.Get("privx_api_client_id").(string),
 		api_client_secret:   d.Get("privx_api_client_secret").(string),
 		base_url:            d.Get("privx_api_base_url").(string),
+		token:               d.Get("privx_api_bearer_token").(string),
 		debug:               d.Get("privx_debug").(bool),
 	}
 	api_client_connector, err := config.NewClientConnector(ctx)

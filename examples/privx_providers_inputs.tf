@@ -24,6 +24,11 @@ variable "PRIVX_API_CLIENT_SECRET" {
   description = "privx api client id"
 }
 
+variable "PRIVX_API_BEARER_TOKEN" {
+  type        = string
+  description = "privx api bearer token"
+}
+
 variable "PRIVX_DEBUG" {
   type        = bool
   default     = false

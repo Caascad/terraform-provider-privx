@@ -24,6 +24,7 @@ type Config struct {
 	oauth_client_secret string
 	api_client_id       string
 	api_client_secret   string
+	token               string
 	debug               bool
 }
 
@@ -34,10 +35,12 @@ type privx_API_client_connector struct {
 }
 
 func authorize(cfg *Config) restapi.Authorizer {
+	if cfg.token != "" {
+		return oauth.WithToken("Bearer " + cfg.token)
+	}
 	return oauth.WithClientID(
 		restapi.New(
 			restapi.BaseURL(cfg.base_url),
-			restapi.Verbose(), /** DEBUG **/
 		),
 		oauth.Access(cfg.api_client_id),
 		oauth.Secret(cfg.api_client_secret),
@@ -46,30 +49,28 @@ func authorize(cfg *Config) restapi.Authorizer {
 }
 
 // 2. Create HTTP transport for PrivX API
-func createConnector(cfg *Config) (restapi.Connector, string, []string) {
+func createConnector(cfg *Config) (restapi.Connector, []string) {
 	var debug []string
 	auth := authorize(cfg)
 	AccessToken, err := auth.AccessToken()
 	if err != nil {
 		debug = append(debug, "API Acces token generated :"+AccessToken)
 		debug = append(debug, "Debug mode : \n"+strconv.FormatBool(cfg.debug))
-		if err != nil {
-			debug = append(debug, "Error message from token generation : "+err.Error())
-		}
+		debug = append(debug, "Error message from oauth : "+err.Error())
 		debug = append(debug, "Privx baseURL: "+cfg.base_url)
 		debug = append(debug, "Privx api_client_id: "+cfg.api_client_id)
 		debug = append(debug, "Privx oauth_client_id"+cfg.oauth_client_id)
 	}
-	return restapi.New(restapi.Auth(*&auth), restapi.BaseURL(cfg.base_url)), AccessToken, debug
+	connector := restapi.New(restapi.Auth(auth), restapi.Verbose(), restapi.BaseURL(cfg.base_url))
+	return connector, debug
 }
 
 // NewClient func...
 func (cfg *Config) NewClientConnector(ctx context.Context) (interface{}, diag.Diagnostics) {
-	connector, token, debug := createConnector(cfg)
+	connector, debug := createConnector(cfg)
 	api_client_connector := privx_API_client_connector{
 		Connector: connector,
 		Config:    cfg,
-		Token:     token, /** DEBUG **/
 	}
 	if cfg.debug || len(debug) != 0 {
 		return api_client_connector, diag.FromErr(errors.New(strings.Join(debug, "\n")))
