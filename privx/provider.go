@@ -93,8 +93,9 @@ func getResourcesMap() map[string]*schema.Resource {
 		"access_group":      resourcePrivXAccessGroup(),
 		"extender":          resourcePrivXExtender(),
 		"host":              resourcePrivXHost(),
-		"role":              resourcePrivXRole(),
 		"secret_credential": resourcePrivXSecretCredential(),
+		"role":              resourcePrivXRole(),
+		"source":            resourcePrivXSource(),
 	}
 	return resourcesMap
 }

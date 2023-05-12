@@ -11,10 +11,17 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "access_groups" "access_groups_list" {
+resource "source" "source-test" {
   provider = privx
-}
-
-output "access_groups_output" {
-  value=data.access_groups.access_groups_list
+  name = "test-source"
+  comment = "source test"
+  ttl = 100
+  tags = ["tag1"]
+  oidc_connection {
+    oidc_button_title = ""
+    oidc_issuer = ""
+    oidc_client_id = ""
+    oidc_client_secret = ""
+    oidc_tags_attribute_name = ""
+  }
 }
