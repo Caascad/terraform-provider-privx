@@ -19,9 +19,8 @@ func dataSourcePrivxExtenderConfig() *schema.Resource {
 				Required: true,
 			},
 			"session_id": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"extender_config": {
 				Type:     schema.TypeString,
