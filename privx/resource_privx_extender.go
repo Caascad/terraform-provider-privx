@@ -89,6 +89,10 @@ func resourcePrivXExtender() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"subnets": {
+				Type:     schema.TypeList,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -106,6 +110,9 @@ func resourcePrivxExtenderCreate(ctx context.Context, d *schema.ResourceData, me
 		WebProxyAddress: d.Get("web_proxy_address").(string),
 		Permissions:     flattenSimpleSlice(d.Get("permissions").([]interface{})),
 		ExtenderAddress: flattenSimpleSlice(d.Get("extender_address").([]interface{})),
+		RoutingPrefix:   d.Get("routing_prefix").(string),
+		AccessGroupId:   d.Get("access_group_id").(string),
+		Subnets:         flattenSimpleSlice(d.Get("subnets").([]interface{})),
 	}
 
 	new_extender_id, err := createUserStoreClient(ctx, meta.(privx_API_client_connector).Connector).CreateTrustedClient(trusted_client)
@@ -159,6 +166,19 @@ func resourcePrivxExtenderRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("web_proxy_address", extender.WebProxyAddress); err != nil {
 		return diag.FromErr(fmt.Errorf(errorExtenderRead, d.Id(), err))
 	}
+
+	if err := d.Set("subnets", extender.Subnets); err != nil {
+		return diag.FromErr(fmt.Errorf(errorExtenderRead, d.Id(), err))
+	}
+
+	if err := d.Set("routing_prefix", extender.RoutingPrefix); err != nil {
+		return diag.FromErr(fmt.Errorf(errorExtenderRead, d.Id(), err))
+	}
+
+	if err := d.Set("access_group_id", extender.AccessGroupId); err != nil {
+		return diag.FromErr(fmt.Errorf(errorExtenderRead, d.Id(), err))
+	}
+
 	return nil
 }
 
@@ -174,6 +194,9 @@ func resourcePrivxExtenderUpdate(ctx context.Context, d *schema.ResourceData, me
 			WebProxyAddress: d.Get("web_proxy_address").(string),
 			Permissions:     flattenSimpleSlice(d.Get("permissions").([]interface{})),
 			ExtenderAddress: flattenSimpleSlice(d.Get("extender_address").([]interface{})),
+			RoutingPrefix:   d.Get("routing_prefix").(string),
+			AccessGroupId:   d.Get("access_group_id").(string),
+			Subnets:         flattenSimpleSlice(d.Get("subnets").([]interface{})),
 		}
 		err := createUserStoreClient(ctx, meta.(privx_API_client_connector).Connector).UpdateTrustedClient(d.Get("id").(string), &trusted_client)
 		if err != nil {
@@ -237,6 +260,18 @@ func resourcePrivXExtenderImportState(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("web_proxy_address", extender.WebProxyAddress); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("subnets", extender.Subnets); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("routing_prefix", extender.RoutingPrefix); err != nil {
+		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
+	}
+
+	if err := d.Set("access_group_id", extender.AccessGroupId); err != nil {
 		return nil, fmt.Errorf(errorExtenderRead, d.Id(), err)
 	}
 	return []*schema.ResourceData{d}, nil
