@@ -56,6 +56,7 @@ func resourcePrivXExtender() *schema.Resource {
 			"access_group_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"web_proxy_address": {
 				Type:     schema.TypeString,
@@ -91,7 +92,11 @@ func resourcePrivXExtender() *schema.Resource {
 			},
 			"subnets": {
 				Type:     schema.TypeList,
+				Computed: true,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
