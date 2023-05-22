@@ -70,8 +70,9 @@ func resourcePrivXSource() *schema.Resource {
 				},
 			},
 			"oidc_connection": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"oidc_enabled": {
