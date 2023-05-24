@@ -17,11 +17,9 @@ resource "source" "source-test" {
   comment = "source test"
   ttl = 100
   tags = ["tag1"]
-  oidc_connection {
-    oidc_button_title = ""
-    oidc_issuer = ""
-    oidc_client_id = ""
-    oidc_client_secret = ""
-    oidc_tags_attribute_name = ""
-  }
+  oidc_button_title = ""
+  oidc_issuer = ""
+  oidc_client_id = ""
+  oidc_client_secret = "" /* Note that lifecycle must ignore change on this attribute since the API mask the client secrets*/
+  oidc_tags_attribute_name = ""
 }

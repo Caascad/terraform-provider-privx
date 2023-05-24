@@ -69,7 +69,7 @@ func listAccessGroups(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.FromErr(fmt.Errorf("error setting `name`: %s", err))
 	}
 
-	d.SetId(resource.UniqueId()) // Ask Benjamin if ID must be handle by TF or privx ID must be kept.
+	d.SetId(resource.UniqueId())
 
 	return nil
 }
