@@ -11,8 +11,8 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "extenders" "extenders_list" {
-  provider = privx
+data "privx_extenders" "extenders_list" {
+
 }
 
 output "extenders" {

@@ -11,8 +11,7 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "extender" "myfirstextender" {
-  provider = privx
+resource "privx_extender" "myfirstextender" {
   name = ""
   type = "EXTENDER" /*Constant*/
   web_proxy_port = 0

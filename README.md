@@ -17,6 +17,7 @@ Hereafter the actual objects handled by the provider.
  - Host
  - Role
  - Secret type credentials
+ - Secret type json
  - Source
  - Trusted-Client : Extender Type
 

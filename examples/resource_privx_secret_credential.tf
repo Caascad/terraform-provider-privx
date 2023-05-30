@@ -11,8 +11,7 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "secret_credential" "monpremiersecret" {
-  provider = privx
+resource "privx_secret_credential" "monpremiersecret" {
   name = "" //credential name, used as ID.
   user = "" //credential user
   pass = "" //credential password
