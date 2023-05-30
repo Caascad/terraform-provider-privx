@@ -54,6 +54,34 @@ func resourcePrivXRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"source_rules": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"match": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"rules": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"source": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"search_string": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -67,7 +95,7 @@ func resourcePrivxRoleCreate(ctx context.Context, d *schema.ResourceData, meta i
 		PermitAgent:   d.Get("permit_agent").(bool),
 		AccessGroupID: d.Get("access_group_id").(string),
 		Permissions:   flattenSimpleSlice(d.Get("permissions").([]interface{})),
-		SourceRule:    rolestore.SourceRuleNone(), // Creates an empty mapping, till we know if we need this.
+		SourceRule:    CreateSourceRule(d.Get("source_rules").([]interface{})),
 	}
 
 	new_role_id, err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).CreateRole(role)
@@ -115,7 +143,7 @@ func resourcePrivxRoleRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePrivxRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("permissions") || d.HasChange("access_group_id") || d.HasChange("permissions") {
+	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("permissions") || d.HasChange("access_group_id") || d.HasChange("permissions") || d.HasChange("source_rules") {
 		var role = rolestore.Role{
 			ID:            d.Get("id").(string),
 			Name:          d.Get("name").(string),
@@ -123,7 +151,7 @@ func resourcePrivxRoleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			PermitAgent:   d.Get("permit_agent").(bool),
 			AccessGroupID: d.Get("access_group_id").(string),
 			Permissions:   flattenSimpleSlice(d.Get("permissions").([]interface{})),
-			SourceRule:    rolestore.SourceRuleNone(),
+			SourceRule:    CreateSourceRule(d.Get("source_rules").([]interface{})),
 		}
 		err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).UpdateRole(d.Get("id").(string), &role)
 		if err != nil {
@@ -154,27 +182,27 @@ func findRoleIndex(mySlice []rolestore.Role, id string) int {
 	return -1
 }
 
-/* Here lies the definition of a source_rules of type single for potential later use.
+func CreateSourceRule(source_rule []interface{}) rolestore.SourceRule {
+	if len(source_rule) < 1 {
+		return rolestore.SourceRuleNone()
+	}
+	var obj_source_rule = rolestore.SourceRule{
+		Type:  "GROUP", /*Force group as API seems to only generate arrays*/
+		Match: source_rule[0].(map[string]interface{})["match"].(string),
+		Rules: CreateNestedSourceRule(source_rule[0].(map[string]interface{})["rules"].([]interface{})),
+	}
+	return obj_source_rule
+}
 
-"source_rules": {
-	Type:     schema.TypeList,
-	Required: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"source": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"search_string": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-		},
-	},
-},
-
-*/
+func CreateNestedSourceRule(source_rules_slice []interface{}) []rolestore.SourceRule {
+	var nested_source_rules = make([]rolestore.SourceRule, len(source_rules_slice))
+	for cpt, rule := range source_rules_slice {
+		var nested_rule = rolestore.SourceRule{
+			Type:    "RULE",
+			Source:  rule.(map[string]interface{})["source"].(string),
+			Pattern: rule.(map[string]interface{})["search_string"].(string),
+		}
+		nested_source_rules[cpt] = nested_rule
+	}
+	return nested_source_rules
+}

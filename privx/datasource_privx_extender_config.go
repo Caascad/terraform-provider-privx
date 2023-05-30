@@ -18,11 +18,6 @@ func dataSourcePrivxExtenderConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"session_id": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
 			"extender_config": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -38,10 +33,6 @@ func extenderConfig(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error generating ExtenderConfigDownloadHandle : %s", err))
-	}
-
-	if err := d.Set("session_id", extender_session_id.SessionID); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `session_id`: %s", err))
 	}
 
 	extender_config, err := GetExtenderConfig(connector, d.Get("trusted_client_id").(string), extender_session_id.SessionID)

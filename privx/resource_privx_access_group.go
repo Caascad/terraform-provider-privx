@@ -90,6 +90,12 @@ func resourcePrivxAccessGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorAccessGroupRead, d.Id(), err))
 	}
+
+	ind := findAccessGroupIndex(access_groups_list, d.Get("id").(string))
+	if ind == -1 {
+		return diag.FromErr(fmt.Errorf(errorAccessGroupRead, d.Id(), fmt.Errorf("%v", nil)))
+	}
+
 	access_group := access_groups_list[findAccessGroupIndex(access_groups_list, d.Get("id").(string))]
 
 	if err := d.Set("name", access_group.Name); err != nil {

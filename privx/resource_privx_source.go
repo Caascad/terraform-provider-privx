@@ -69,38 +69,30 @@ func resourcePrivXSource() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"oidc_connection": {
-				Type:     schema.TypeList,
+			"oidc_client_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"oidc_client_secret": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+			},
+			"oidc_enabled": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
+			"oidc_issuer": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"oidc_tags_attribute_name": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"oidc_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"oidc_issuer": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"oidc_button_title": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"oidc_client_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"oidc_client_secret": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"oidc_tags_attribute_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
+			},
+			"oidc_button_title": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -116,7 +108,7 @@ func resourcePrivxSourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		TTL:             d.Get("ttl").(int),
 		UsernamePattern: flattenSimpleSlice(d.Get("username_pattern").([]interface{})),
 		Tags:            flattenSimpleSlice(d.Get("tags").([]interface{})),
-		Connection:      create_oidc_connection(d.Get("oidc_connection").([]interface{})),
+		Connection:      create_oidc_connection(d),
 	}
 
 	new_Source_id, err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).CreateSource(Source)
@@ -147,19 +139,43 @@ func resourcePrivxSourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
 
+	if err := d.Set("ttl", Source.TTL); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
 	if err := d.Set("enabled", Source.Enabled); err != nil {
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
+	if err := d.Set("username_pattern", Source.UsernamePattern); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("tags", Source.Tags); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
 
-	if err := d.Set("oidc_connection", flatten_oidc_connection(Source.Connection)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorSourceRead, Source.Connection, err))
+	if err := d.Set("oidc_client_id", Source.Connection.OIDCClientID); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("oidc_client_secret", Source.Connection.OIDCClientSecret); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("oidc_enabled", Source.Connection.OIDCEnabled); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("oidc_issuer", Source.Connection.OIDCIssuer); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("oidc_tags_attribute_name", Source.Connection.OIDCTagsAttributeName); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	if err := d.Set("oidc_button_title", Source.Connection.OIDCButtonTitle); err != nil {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
 
 	return nil
 }
 
 func resourcePrivxSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("enabled") || d.HasChange("tags") || d.HasChange("username_pattern") || d.HasChange("ttl") || d.HasChange("oidc_connection") {
+	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("enabled") || d.HasChange("tags") || d.HasChange("username_pattern") || d.HasChange("ttl") {
 		var Source = rolestore.Source{
 			ID:              d.Get("id").(string),
 			Name:            d.Get("name").(string),
@@ -168,7 +184,7 @@ func resourcePrivxSourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			TTL:             d.Get("ttl").(int),
 			UsernamePattern: flattenSimpleSlice(d.Get("username_pattern").([]interface{})),
 			Tags:            flattenSimpleSlice(d.Get("tags").([]interface{})),
-			Connection:      create_oidc_connection(d.Get("oidc_connection").([]interface{})),
+			Connection:      create_oidc_connection(d),
 		}
 		err := createRoleClient(ctx, meta.(privx_API_client_connector).Connector).UpdateSource(d.Get("id").(string), &Source)
 		if err != nil {
@@ -199,30 +215,15 @@ func findSourceIndex(mySlice []rolestore.Source, id string) int {
 	return -1
 }
 
-func create_oidc_connection(oidc_connection []interface{}) rolestore.Connection {
-	results := rolestore.Connection{
+func create_oidc_connection(d *schema.ResourceData) rolestore.Connection {
+	connection := rolestore.Connection{
 		Type:                  "OIDC",
-		OIDCEnabled:           oidc_connection[0].(map[string]interface{})["oidc_enabled"].(bool),
-		OIDCIssuer:            oidc_connection[0].(map[string]interface{})["oidc_issuer"].(string),
-		OIDCClientID:          oidc_connection[0].(map[string]interface{})["oidc_client_id"].(string),
-		OIDCButtonTitle:       oidc_connection[0].(map[string]interface{})["oidc_button_title"].(string),
-		OIDCClientSecret:      oidc_connection[0].(map[string]interface{})["oidc_client_secret"].(string),
-		OIDCTagsAttributeName: oidc_connection[0].(map[string]interface{})["oidc_tags_attribute_name"].(string),
+		OIDCEnabled:           d.Get("oidc_enabled").(bool),
+		OIDCIssuer:            d.Get("oidc_issuer").(string),
+		OIDCClientID:          d.Get("oidc_client_id").(string),
+		OIDCButtonTitle:       d.Get("oidc_button_title").(string),
+		OIDCClientSecret:      d.Get("oidc_client_secret").(string),
+		OIDCTagsAttributeName: d.Get("oidc_tags_attribute_name").(string),
 	}
-	return results
-}
-
-func flatten_oidc_connection(connection rolestore.Connection) []Oidc_connection {
-	var result []Oidc_connection
-	flattened_connection := Oidc_connection{
-		oidc_enabled:             connection.OIDCEnabled,
-		oidc_button_title:        connection.OIDCButtonTitle,
-		oidc_client_id:           connection.OIDCClientID,
-		oidc_issuer:              connection.OIDCIssuer,
-		oidc_client_secret:       connection.OIDCClientSecret,
-		oidc_tags_attribute_name: connection.OIDCTagsAttributeName,
-	}
-	result = append(result, flattened_connection)
-
-	return result
+	return connection
 }

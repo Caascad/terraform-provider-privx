@@ -17,6 +17,17 @@ resource "role" "role-test" {
   comment = "role test"
   access_group_id = ""
   permissions = ["connections-view"]
+  source_rules {
+    match = "ANY|ALL"
+    rules {
+      source = ""
+      search_string = ""
+    }
+    rules {
+      source = ""
+      search_string = ""
+    }
+  }
 }
 
 /* List of available permissions.
