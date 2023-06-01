@@ -49,7 +49,7 @@ func authorize(cfg *Config) restapi.Authorizer {
 }
 
 // 2. Create HTTP transport for PrivX API
-func createConnector(cfg *Config) (restapi.Connector, []string) {
+func createConnector(cfg *Config) (restapi.Connector, string, []string) {
 	var debug []string
 	auth := authorize(cfg)
 	AccessToken, err := auth.AccessToken()
@@ -62,15 +62,16 @@ func createConnector(cfg *Config) (restapi.Connector, []string) {
 		debug = append(debug, "Privx oauth_client_id"+cfg.oauth_client_id)
 	}
 	connector := restapi.New(restapi.Auth(auth), restapi.Verbose(), restapi.BaseURL(cfg.base_url))
-	return connector, debug
+	return connector, AccessToken, debug
 }
 
 // NewClient func...
 func (cfg *Config) NewClientConnector(ctx context.Context) (interface{}, diag.Diagnostics) {
-	connector, debug := createConnector(cfg)
+	connector, AccessToken, debug := createConnector(cfg)
 	api_client_connector := privx_API_client_connector{
 		Connector: connector,
 		Config:    cfg,
+		Token:     AccessToken,
 	}
 	if cfg.debug || len(debug) != 0 {
 		return api_client_connector, diag.FromErr(errors.New(strings.Join(debug, "\n")))
