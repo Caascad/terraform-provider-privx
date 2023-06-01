@@ -11,14 +11,9 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "privx_source" "source-test" {
-  name = "test-source"
-  comment = "source test"
-  ttl = 100
-  tags = ["tag1"]
-  oidc_button_title = ""
-  oidc_issuer = ""
-  oidc_client_id = ""
-  oidc_client_secret = "" /* Note that lifecycle must ignore change on this attribute since the API mask the client secrets*/
-  oidc_tags_attribute_name = ""
+resource "privx_secret_json" "monpremiersecret" {
+  name        = "monpremiersecret_api" // name of the secret
+  data        = "{}" //secret data to store
+  read_roles = [""] // List of roles id
+  write_roles = [""] // List of roles id
 }

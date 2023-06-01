@@ -12,7 +12,6 @@ provider "privx" {
 }
 
 data "extender_config" "conf_extender" {
-  provider = privx
   trusted_client_id = ""
 }
 

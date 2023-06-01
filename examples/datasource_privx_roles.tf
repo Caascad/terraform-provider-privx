@@ -11,8 +11,8 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "roles" "list_roles" {
-  provider = privx
+data "privx_roles" "list_roles" {
+
 }
 
 output "roles" {

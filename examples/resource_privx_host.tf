@@ -11,8 +11,7 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "host" "myfirsthost" {
-  provider=privx
+resource "privx_host" "myfirsthost" {
   access_group_id = ""
   external_id = ""
   instance_id = ""

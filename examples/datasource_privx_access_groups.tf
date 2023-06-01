@@ -11,8 +11,8 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-data "access_groups" "access_groups_list" {
-  provider = privx
+data "privx_access_groups" "access_groups_list" {
+
 }
 
 output "access_groups_output" {

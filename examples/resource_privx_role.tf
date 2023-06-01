@@ -11,8 +11,7 @@ provider "privx" {
   privx_debug               = var.PRIVX_DEBUG
 }
 
-resource "role" "role-test" {
-  provider = privx
+resource "privx_role" "role-test" {
   name = "test-role"
   comment = "role test"
   access_group_id = ""
