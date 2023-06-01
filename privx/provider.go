@@ -91,6 +91,7 @@ func getDataSourcesMap() map[string]*schema.Resource {
 func getResourcesMap() map[string]*schema.Resource {
 	resourcesMap := map[string]*schema.Resource{
 		"privx_access_group":      resourcePrivXAccessGroup(),
+		"privx_api_client":        resourcePrivXApiClient(),
 		"privx_extender":          resourcePrivXExtender(),
 		"privx_host":              resourcePrivXHost(),
 		"privx_secret_credential": resourcePrivXSecretCredential(),
