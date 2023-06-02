@@ -14,6 +14,7 @@ Hereafter the actual objects handled by the provider.
 
 ### Ressource :
  - Access Group
+ - API Client
  - Host
  - Role
  - Secret type credentials
