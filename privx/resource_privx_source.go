@@ -129,7 +129,11 @@ func resourcePrivxSourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
-	Source := Sources_list[findSourceIndex(Sources_list, d.Get("id").(string))]
+	ind := findSourceIndex(Sources_list, d.Get("id").(string))
+	if ind == -1 {
+		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
+	}
+	Source := Sources_list[ind]
 
 	if err := d.Set("name", Source.Name); err != nil {
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))

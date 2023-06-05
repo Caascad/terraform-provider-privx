@@ -20,6 +20,10 @@ type SecretJsonData struct {
 	Data string `json:"-"`
 }
 
+func (s SecretJsonData) MarshalJSON() ([]byte, error) {
+	return []byte(s.Data), nil
+}
+
 // tVaultReq t vault request definition
 type tVaultReqJson struct {
 	Name       string              `json:"name"`
