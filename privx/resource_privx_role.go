@@ -54,6 +54,14 @@ func resourcePrivXRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"public_keys": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"source_rules": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -135,6 +143,10 @@ func resourcePrivxRoleRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := d.Set("permissions", role.Permissions); err != nil {
+		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
+	}
+
+	if err := d.Set("public_keys", role.PublicKey); err != nil {
 		return diag.FromErr(fmt.Errorf(errorRoleRead, d.Id(), err))
 	}
 
