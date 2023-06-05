@@ -155,9 +155,6 @@ func resourcePrivxSourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("oidc_client_id", Source.Connection.OIDCClientID); err != nil {
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
-	if err := d.Set("oidc_client_secret", Source.Connection.OIDCClientSecret); err != nil {
-		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
-	}
 	if err := d.Set("oidc_enabled", Source.Connection.OIDCEnabled); err != nil {
 		return diag.FromErr(fmt.Errorf(errorSourceRead, d.Id(), err))
 	}
