@@ -18,4 +18,6 @@ resource "privx_extender" "myfirstextender" {
   web_proxy_address = ""
   routing_prefix = ""
   group_id = ""
+  extender_address = [""]
+  subnets = [""]
 }

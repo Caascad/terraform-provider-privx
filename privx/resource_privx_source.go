@@ -176,7 +176,7 @@ func resourcePrivxSourceRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourcePrivxSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("enabled") || d.HasChange("tags") || d.HasChange("username_pattern") || d.HasChange("ttl") {
+	if d.HasChange("name") || d.HasChange("comment") || d.HasChange("enabled") || d.HasChange("tags") || d.HasChange("username_pattern") || d.HasChange("ttl") || d.HasChange("oidc_client_id") || d.HasChange("oidc_client_secret") || d.HasChange("oidc_enabled") || d.HasChange("oidc_issuer") || d.HasChange("oidc_tags_attribute_name") || d.HasChange("oidc_button_title") {
 		var Source = rolestore.Source{
 			ID:              d.Get("id").(string),
 			Name:            d.Get("name").(string),
