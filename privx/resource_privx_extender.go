@@ -189,7 +189,7 @@ func resourcePrivxExtenderRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePrivxExtenderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	if d.HasChange("name") || d.HasChange("extender_address") || d.HasChange("permissions") { //Routing_prefix is not handled by SDK.
+	if d.HasChange("name") || d.HasChange("extender_address") || d.HasChange("permissions") || d.HasChange("name") || d.HasChange("enabled") || d.HasChange("registered") || d.HasChange("type") || d.HasChange("access_group_id") || d.HasChange("web_proxy_address") || d.HasChange("web_proxy_port") || d.HasChange("routing_prefix") || d.HasChange("subnets") {
 		var clientType userstore.ClientType = userstore.ClientType(d.Get("type").(string))
 		var trusted_client = userstore.TrustedClient{
 			Enabled:         d.Get("enabled").(bool),
