@@ -123,12 +123,6 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	api_client, err := r.client.APIClient(data.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to api_client role, got error: %s", err))
-		return
-	}
-
 	var rolesPayload []string
 	for _, roleRef := range data.Roles {
 		rolesPayload = append(rolesPayload, roleRef.ID.ValueString())
@@ -141,6 +135,12 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 			"An unexpected error occurred while attempting to create the resource.\n"+
 				err.Error(),
 		)
+		return
+	}
+
+	api_client, err := r.client.APIClient(id)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read api_client, got error: %s", err))
 		return
 	}
 
