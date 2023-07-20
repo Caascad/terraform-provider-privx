@@ -31,9 +31,12 @@ type APIClientResource struct {
 
 // APIClientModel describes the resource data model.
 type APIClientModel struct {
-	ID    types.String   `tfsdk:"id"`
-	Name  types.String   `tfsdk:"name"`
-	Roles []RoleRefModel `tfsdk:"roles"`
+	ID                types.String   `tfsdk:"id"`
+	Name              types.String   `tfsdk:"name"`
+	Secret            types.String   `tfsdk:"secret"`
+	OauthClientId     types.String   `tfsdk:"oauth_client_id"`
+	OauthClientSecret types.String   `tfsdk:"oauth_client_secret"`
+	Roles             []RoleRefModel `tfsdk:"roles"`
 }
 
 func (r *APIClientResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -56,6 +59,27 @@ func (r *APIClientResource) Schema(ctx context.Context, req resource.SchemaReque
 			"name": schema.StringAttribute{
 				MarkdownDescription: "name of the API client",
 				Required:            true,
+			},
+			"secret": schema.StringAttribute{
+				MarkdownDescription: "secret of the API client",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"oauth_client_id": schema.StringAttribute{
+				MarkdownDescription: "oauth_client_id of the API client",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"oauth_client_secret": schema.StringAttribute{
+				MarkdownDescription: "oauth_client_secret of the API client",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"roles": schema.SetNestedAttribute{
 				MarkdownDescription: "List of roles possessed by the API client",
@@ -160,6 +184,9 @@ func (r *APIClientResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 	data.Roles = roles
 	data.Name = types.StringValue(apiClient.Name)
+	data.Secret = types.StringValue(apiClient.AuthClientID)
+	data.OauthClientId = types.StringValue(apiClient.AuthClientSecret)
+	data.OauthClientSecret = types.StringValue(apiClient.Secret)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
