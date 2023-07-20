@@ -147,12 +147,12 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 	// For the purposes of this example code, hardcoding a response value to
 	// save into the Terraform state.
 	data.ID = types.StringValue(id)
+	data.Secret = types.StringValue(api_client.Secret)
+	data.OauthClientId = types.StringValue(api_client.AuthClientID)
+	data.OauthClientSecret = types.StringValue(api_client.AuthClientSecret)
 
 	ctx = tflog.SetField(ctx, "API client name", data.Name.ValueString())
 	ctx = tflog.SetField(ctx, "API client roles", data.Roles)
-	ctx = tflog.SetField(ctx, "API client Secret", api_client.Secret)
-	ctx = tflog.SetField(ctx, "API client oauthclientid", api_client.AuthClientID)
-	ctx = tflog.SetField(ctx, "client oauthclientsecret", api_client.AuthClientSecret)
 	tflog.Debug(ctx, "Created API client")
 
 	// Save data into Terraform state
