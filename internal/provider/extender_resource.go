@@ -38,6 +38,8 @@ type ExtenderResourceModel struct {
 	Enabled         types.Bool   `tfsdk:"enabled"`
 	Permissions     types.List   `tfsdk:"permissions"`
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
+	Subnets         types.List   `tfsdk:"subnets"`
+	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
 }
 
 func (r *ExtenderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -82,6 +84,15 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 			"extender_address": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Extender addresses",
+				Optional:            true,
+			},
+			"subnets": schema.ListAttribute{
+				ElementType:         types.StringType,
+				MarkdownDescription: "Subnets",
+				Optional:            true,
+			},
+			"routing_prefix": schema.StringAttribute{
+				MarkdownDescription: "Routing Prefix",
 				Optional:            true,
 			},
 		},
@@ -140,6 +151,14 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
+	var extenderSubnetsPayload []string
+	if len(data.Subnets.Elements()) > 0 {
+		resp.Diagnostics.Append(data.Subnets.ElementsAs(ctx, &extenderSubnetsPayload, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	extender := userstore.TrustedClient{
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
@@ -147,6 +166,8 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		Enabled:         data.Enabled.ValueBool(),
 		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
+		Subnets:         extenderSubnetsPayload,
+		RoutingPrefix:   data.RoutingPrefix.ValueString(),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("userstore.Extender model used: %+v", extender))
@@ -194,6 +215,13 @@ func (r *ExtenderResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Secret = types.StringValue(extender.Secret)
 	data.Registered = types.BoolValue(extender.Registered)
 	data.Enabled = types.BoolValue(extender.Enabled)
+	data.RoutingPrefix = types.StringValue(extender.RoutingPrefix)
+
+	subnets, diags := types.ListValueFrom(ctx, data.Subnets.ElementType(ctx), extender.Subnets)
+	if diags.HasError() {
+		return
+	}
+	data.Subnets = subnets
 
 	permissions, diags := types.ListValueFrom(ctx, data.Permissions.ElementType(ctx), extender.Permissions)
 	if diags.HasError() {
@@ -240,13 +268,23 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
+	var extenderSubnetsPayload []string
+	if len(data.Subnets.Elements()) > 0 {
+		resp.Diagnostics.Append(data.Subnets.ElementsAs(ctx, &extenderSubnetsPayload, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	extender := userstore.TrustedClient{
 		Name:            data.Name.ValueString(),
 		Secret:          data.Secret.ValueString(),
 		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
+		Subnets:         extenderSubnetsPayload,
 		Registered:      data.Registered.ValueBool(),
 		Enabled:         data.Enabled.ValueBool(),
+		RoutingPrefix:   data.RoutingPrefix.ValueString(),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("userstore.Extender model used: %+v", extender))
