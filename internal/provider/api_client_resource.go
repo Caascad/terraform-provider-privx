@@ -123,6 +123,12 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
+	api_client, err := r.client.APIClient(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to api_client role, got error: %s", err))
+		return
+	}
+
 	var rolesPayload []string
 	for _, roleRef := range data.Roles {
 		rolesPayload = append(rolesPayload, roleRef.ID.ValueString())
@@ -144,6 +150,9 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 
 	ctx = tflog.SetField(ctx, "API client name", data.Name.ValueString())
 	ctx = tflog.SetField(ctx, "API client roles", data.Roles)
+	ctx = tflog.SetField(ctx, "API client Secret", api_client.Secret)
+	ctx = tflog.SetField(ctx, "API client oauthclientid", api_client.AuthClientID)
+	ctx = tflog.SetField(ctx, "client oauthclientsecret", api_client.AuthClientSecret)
 	tflog.Debug(ctx, "Created API client")
 
 	// Save data into Terraform state
