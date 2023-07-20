@@ -150,6 +150,14 @@ func (r *APIClientResource) Create(ctx context.Context, req resource.CreateReque
 	data.Secret = types.StringValue(api_client.Secret)
 	data.OauthClientId = types.StringValue(api_client.AuthClientID)
 	data.OauthClientSecret = types.StringValue(api_client.AuthClientSecret)
+	var roles []RoleRefModel
+	for _, role := range api_client.Roles {
+		roles = append(roles,
+			RoleRefModel{ID: types.StringValue(role.ID),
+				Name: types.StringValue(role.Name),
+			})
+	}
+	data.Roles = roles
 
 	ctx = tflog.SetField(ctx, "API client name", data.Name.ValueString())
 	ctx = tflog.SetField(ctx, "API client roles", data.Roles)
