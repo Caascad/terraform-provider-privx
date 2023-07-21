@@ -31,15 +31,16 @@ type ExtenderResource struct {
 // Extender contains PrivX extender information.
 type ExtenderResourceModel struct {
 	ID              types.String `tfsdk:"id"`
-	Secret          types.String `tfsdk:"secret"`
-	Name            types.String `tfsdk:"name"`
-	WebProxyAddress types.String `tfsdk:"web_proxy_address"`
-	Registered      types.Bool   `tfsdk:"registered"`
 	Enabled         types.Bool   `tfsdk:"enabled"`
+	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
+	Name            types.String `tfsdk:"name"`
 	Permissions     types.List   `tfsdk:"permissions"`
+	Secret          types.String `tfsdk:"secret"`
+	WebProxyAddress types.String `tfsdk:"web_proxy_address"`
+	WebProxyPort    types.Int64  `tfsdk:"web_proxy_port"`
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
 	Subnets         types.List   `tfsdk:"subnets"`
-	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
+	Registered      types.Bool   `tfsdk:"registered"`
 }
 
 func (r *ExtenderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -58,8 +59,21 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"enabled": schema.BoolAttribute{
+				MarkdownDescription: "Extender enabled",
+				Required:            true,
+			},
+			"routing_prefix": schema.StringAttribute{
+				MarkdownDescription: "Routing Prefix",
+				Optional:            true,
+			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Extender name",
+				Required:            true,
+			},
+			"permissions": schema.ListAttribute{
+				ElementType:         types.StringType,
+				MarkdownDescription: "Extender permissions",
 				Optional:            true,
 			},
 			"secret": schema.StringAttribute{
@@ -67,18 +81,12 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				Sensitive:           true,
 				Computed:            true,
 			},
-			"registered": schema.BoolAttribute{
-				MarkdownDescription: "Extender registered",
-				Computed:            true,
-			},
-			"enabled": schema.BoolAttribute{
-				MarkdownDescription: "Extender enabled",
+			"web_proxy_address": schema.StringAttribute{
+				MarkdownDescription: "Web Proxy address",
 				Optional:            true,
-				Computed:            true,
 			},
-			"permissions": schema.ListAttribute{
-				ElementType:         types.StringType,
-				MarkdownDescription: "Extender permissions",
+			"web_proxy_port": schema.Int64Attribute{
+				MarkdownDescription: "Web Proxy address",
 				Optional:            true,
 			},
 			"extender_address": schema.ListAttribute{
@@ -91,9 +99,9 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Subnets",
 				Optional:            true,
 			},
-			"routing_prefix": schema.StringAttribute{
-				MarkdownDescription: "Routing Prefix",
-				Optional:            true,
+			"registered": schema.BoolAttribute{
+				MarkdownDescription: "Extender registered",
+				Computed:            true,
 			},
 		},
 	}
