@@ -45,7 +45,7 @@ resource "privx_host" "foo" {
 - `common_name` (String) X.500 Common name (searchable by keyword)
 - `contact_address` (String) The host public address scanning script instructs the host store to use in service address-field.
 - `deployable` (Boolean) Whether the host is writable through /deploy end point with deployment credentials
-- `disabled` (String) disabled
+- `disabled` (String) disabled ("BY_ADMIN" | "BY_LISCENCE" | "false")
 - `distinguished_name` (String) LDAPv3 Disinguished name (searchable by keyword)
 - `external_id` (String) The equipment ID from the originating equipment store
 - `host_classification` (String) Classification (Windows desktop, Windows server, AIX, Linux RH, ..) (searchable by keyword)
