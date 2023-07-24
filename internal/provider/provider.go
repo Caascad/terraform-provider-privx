@@ -29,9 +29,9 @@ type privxProvider struct {
 // privxProviderModel describes the provider data model.
 type privxProviderModel struct {
 	APIBaseURL        types.String `tfsdk:"api_base_url"`
+	APIBearerToken    types.String `tfsdk:"api_bearer_token"`
 	APIClientID       types.String `tfsdk:"api_client_id"`
 	APIClientSecret   types.String `tfsdk:"api_client_secret"`
-	APIBearerToken    types.String `tfsdk:"api_bearer_token"`
 	OAuthClientID     types.String `tfsdk:"api_oauth_client_id"`
 	OAuthClientSecret types.String `tfsdk:"api_oauth_client_secret"`
 	Debug             types.Bool   `tfsdk:"debug"`
@@ -101,6 +101,15 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 	}
 
+	if data.APIBearerToken.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_bearer_token"),
+			"Unknown PrivX API bearer token",
+			"The provider cannot create the PrivX API client as there is an unknown configuration value for the PrivX API bearer token. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the PRIVX_API_BEARER_TOKEN environment variable.",
+		)
+	}
+
 	if data.APIClientID.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_client_id"),
@@ -119,16 +128,7 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 	}
 
-	if data.APIClientSecret.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_bearer_token"),
-			"Unknown PrivX API bearer token",
-			"The provider cannot create the PrivX API client as there is an unknown configuration value for the PrivX API bearer token. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the PRIVX_API_BEARER_TOKEN environment variable.",
-		)
-	}
-
-	if data.APIClientSecret.IsUnknown() {
+	if data.OAuthClientID.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_oauth_client_id"),
 			"Unknown PrivX API OAuth client ID",
@@ -137,7 +137,7 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 	}
 
-	if data.APIClientSecret.IsUnknown() {
+	if data.OAuthClientSecret.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_oauth_client_secret"),
 			"Unknown PrivX OAuth client secret",
@@ -154,14 +154,18 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	// with Terraform configuration value if set.
 
 	apiBaseURL := os.Getenv("PRIVX_API_BASE_URL")
+	apiBearerToken := os.Getenv("PRIVX_API_BEARER_TOKEN")
 	apiClientID := os.Getenv("PRIVX_API_CLIENT_ID")
 	apiClientSecret := os.Getenv("PRIVX_API_CLIENT_SECRET")
-	apiBearerToken := os.Getenv("PRIVX_API_BEARER_TOKEN")
 	oauthClientID := os.Getenv("PRIVX_API_OAUTH_CLIENT_ID")
 	oauthClientSecret := os.Getenv("PRIVX_API_OAUTH_CLIENT_SECRET")
 
 	if !data.APIBaseURL.IsNull() {
 		apiBaseURL = data.APIBaseURL.ValueString()
+	}
+
+	if !data.APIBearerToken.IsNull() {
+		apiBearerToken = data.APIBearerToken.ValueString()
 	}
 
 	if !data.APIClientID.IsNull() {
@@ -172,16 +176,12 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		apiClientSecret = data.APIClientSecret.ValueString()
 	}
 
-	if !data.APIBearerToken.IsNull() {
-		apiBearerToken = data.APIBearerToken.ValueString()
-	}
-
 	if !data.OAuthClientID.IsNull() {
-		oauthClientID = data.APIClientID.ValueString()
+		oauthClientID = data.OAuthClientID.ValueString()
 	}
 
 	if !data.OAuthClientSecret.IsNull() {
-		oauthClientSecret = data.APIClientSecret.ValueString()
+		oauthClientSecret = data.OAuthClientSecret.ValueString()
 	}
 
 	// If any of the expected configurations are missing, return
@@ -198,6 +198,7 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	}
 
 	if apiBearerToken == "" {
+
 		if apiClientID == "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("api_client_id"),
@@ -217,6 +218,7 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 					"If either is already set, ensure the value is not empty.",
 			)
 		}
+
 		if oauthClientID == "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("api_oauth_client_id"),
@@ -244,10 +246,11 @@ func (p *privxProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	}
 
 	ctx = tflog.SetField(ctx, "api_base_url", apiBaseURL)
+	ctx = tflog.SetField(ctx, "api_bearer_token", apiBearerToken)
 	ctx = tflog.SetField(ctx, "api_client_id", apiClientID)
+	ctx = tflog.SetField(ctx, "api_client_secret", apiClientSecret)
 	ctx = tflog.SetField(ctx, "api_oauth_client_id", oauthClientID)
 	ctx = tflog.SetField(ctx, "api_oauth_client_secret", oauthClientSecret)
-	ctx = tflog.SetField(ctx, "api_client_secret", apiClientSecret)
 	//	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "api_client_secret")
 	//	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "api_oauth_client_secret")
 	//	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "api_bearer_token")
