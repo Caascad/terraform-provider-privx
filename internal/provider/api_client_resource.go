@@ -192,9 +192,9 @@ func (r *APIClientResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 	data.Roles = roles
 	data.Name = types.StringValue(apiClient.Name)
-	data.Secret = types.StringValue(apiClient.AuthClientID)
-	data.OauthClientId = types.StringValue(apiClient.AuthClientSecret)
-	data.OauthClientSecret = types.StringValue(apiClient.Secret)
+	data.Secret = types.StringValue(apiClient.Secret)
+	data.OauthClientId = types.StringValue(apiClient.AuthClientID)
+	data.OauthClientSecret = types.StringValue(apiClient.AuthClientSecret)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

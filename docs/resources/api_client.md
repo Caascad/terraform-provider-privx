@@ -38,8 +38,8 @@ resource "privx_api_client" "foo" {
 ### Read-Only
 
 - `id` (String) ID of the API client
-- `oauth_client_id` (String) ID for OAuth2 client, used for authentication
-- `oauth_client_secret` (String) Secret for OAuth2 client, used for authentication
+- `oauth_client_id` (String) oauth_client_id of the API client
+- `oauth_client_secret` (String) oauth_client_secret of the API client
 - `secret` (String) secret of the API client
 
 <a id="nestedatt--roles"></a>
