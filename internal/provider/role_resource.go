@@ -351,6 +351,7 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	role := rolestore.Role{
+		ID:            data.ID.ValueString(),
 		Name:          data.Name.ValueString(),
 		Comment:       data.Comment.ValueString(),
 		AccessGroupID: data.AccessGroupID.ValueString(),
