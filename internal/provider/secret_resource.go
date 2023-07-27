@@ -186,7 +186,7 @@ func (r *SecretResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	secret, err := r.client.Secret(data.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read secret, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read secret : %s, got error: %s", data.Name.ValueString(), err))
 		return
 	}
 
@@ -222,9 +222,11 @@ func (r *SecretResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 func (r *SecretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data *SecretResourceModel
+	var name_from_state string
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name_from_state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -250,13 +252,29 @@ func (r *SecretResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	if err := r.client.UpdateSecret(data.Name.ValueString(), readRolesPayload, writeRolesPayload, secretPayload); err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Resource",
-			"An unexpected error occurred while attempting to create the resource.\n"+
-				err.Error(),
-		)
-		return
+	//If secret change name trigger delete of old secret then recreate
+	if data.Name.ValueString() != name_from_state {
+		if err := r.client.CreateSecret(data.Name.ValueString(), readRolesPayload, writeRolesPayload, secretPayload); err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Create Resource",
+				"An unexpected error occurred while attempting to create the resource.\n"+
+					err.Error(),
+			)
+			return
+		}
+		if err := r.client.DeleteSecret(name_from_state); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete secret, got error: %s", err))
+			return
+		}
+	} else {
+		if err := r.client.UpdateSecret(data.Name.ValueString(), readRolesPayload, writeRolesPayload, secretPayload); err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Create Resource",
+				"An unexpected error occurred while attempting to create the resource.\n"+
+					err.Error(),
+			)
+			return
+		}
 	}
 
 	ctx = tflog.SetField(ctx, "secret name", data.Name.ValueString())

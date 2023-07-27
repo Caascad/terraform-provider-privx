@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -130,7 +131,10 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"principal_public_key_strings": schema.SetAttribute{
-				ElementType:         types.StringType,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				MarkdownDescription: "List of role's principal public keys",
 				Computed:            true,
 			},
@@ -350,6 +354,14 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	var publicKeyPayload []string
+	if len(data.PublicKey.Elements()) > 0 {
+		resp.Diagnostics.Append(data.PublicKey.ElementsAs(ctx, &publicKeyPayload, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	role := rolestore.Role{
 		ID:            data.ID.ValueString(),
 		Name:          data.Name.ValueString(),
@@ -357,6 +369,7 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		AccessGroupID: data.AccessGroupID.ValueString(),
 		Permissions:   permissionsPayload,
 		PermitAgent:   data.PermitAgent.ValueBool(),
+		PublicKey:     publicKeyPayload,
 		SourceRule:    sourceRule,
 	}
 
@@ -369,34 +382,6 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update role, got error: %s", err))
 		return
 	}
-
-	// Get role public key into state.
-	// PrivX takes some time to generate them.
-	publicKeyData := []string{"Generating Keys ..."}
-	timeout := 12 * time.Second
-	startTime := time.Now()
-	for true {
-		roleRead, err := r.client.Role(data.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read role, got error: %s", err))
-			return
-		}
-		if !strings.Contains(roleRead.PublicKey[0], "Generating keys...") {
-			publicKeyData = roleRead.PublicKey
-			break
-		}
-		if time.Since(startTime) > timeout {
-			tflog.Debug(ctx, "timeout reached")
-			break
-		}
-		time.Sleep(time.Second)
-		tflog.Debug(ctx, fmt.Sprintf("Waiting for public keys to be generated (%s timeout)", timeout))
-	}
-	publicKey, diags := types.SetValueFrom(ctx, data.PublicKey.ElementType(ctx), publicKeyData)
-	if diags.HasError() {
-		return
-	}
-	data.PublicKey = publicKey
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
