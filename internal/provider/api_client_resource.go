@@ -63,14 +63,23 @@ func (r *APIClientResource) Schema(ctx context.Context, req resource.SchemaReque
 			"secret": schema.StringAttribute{
 				MarkdownDescription: "secret of the API client",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"oauth_client_id": schema.StringAttribute{
 				MarkdownDescription: "oauth_client_id of the API client",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"oauth_client_secret": schema.StringAttribute{
 				MarkdownDescription: "oauth_client_secret of the API client",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"roles": schema.SetNestedAttribute{
 				MarkdownDescription: "List of roles possessed by the API client",
@@ -216,8 +225,12 @@ func (r *APIClientResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	apiClientPayload := userstore.APIClient{
-		Name:  data.Name.ValueString(),
-		Roles: rolesPayload,
+		ID:               data.ID.ValueString(),
+		Name:             data.Name.ValueString(),
+		Secret:           data.Secret.ValueString(),
+		AuthClientID:     data.OauthClientId.ValueString(),
+		AuthClientSecret: data.OauthClientSecret.ValueString(),
+		Roles:            rolesPayload,
 	}
 
 	if err := r.client.UpdateAPIClient(data.ID.ValueString(), &apiClientPayload); err != nil {
