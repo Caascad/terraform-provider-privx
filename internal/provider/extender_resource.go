@@ -42,6 +42,7 @@ type ExtenderResourceModel struct {
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
 	Subnets         types.List   `tfsdk:"subnets"`
 	Registered      types.Bool   `tfsdk:"registered"`
+	AccessGroupId   types.String `tfsdk:"registered"`
 }
 
 func (r *ExtenderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -99,6 +100,14 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				ElementType:         types.StringType,
 				MarkdownDescription: "Subnets",
 				Optional:            true,
+			},
+			"access_group_id": schema.StringAttribute{
+				MarkdownDescription: "Access Group ID",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"registered": schema.BoolAttribute{
 				MarkdownDescription: "Extender registered",
@@ -174,9 +183,9 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	extender := userstore.TrustedClient{
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
-		Registered:      data.Registered.ValueBool(),
 		Enabled:         data.Enabled.ValueBool(),
 		Permissions:     permissionsPayload,
+		AccessGroupId:   data.AccessGroupId.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		Subnets:         extenderSubnetsPayload,
 		RoutingPrefix:   data.RoutingPrefix.ValueString(),
@@ -293,8 +302,8 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 		Secret:          data.Secret.ValueString(),
 		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
+		AccessGroupId:   data.AccessGroupId.ValueString(),
 		Subnets:         extenderSubnetsPayload,
-		Registered:      data.Registered.ValueBool(),
 		Enabled:         data.Enabled.ValueBool(),
 		RoutingPrefix:   data.RoutingPrefix.ValueString(),
 	}
