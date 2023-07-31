@@ -3,7 +3,7 @@ module terraform-provider-privx
 go 1.20
 
 require (
-	github.com/SSHcom/privx-sdk-go v1.29.0
+	github.com/SSHcom/privx-sdk-go v1.30.0
 	github.com/hashicorp/terraform-plugin-docs v0.15.0
 	github.com/hashicorp/terraform-plugin-framework v1.3.2
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
