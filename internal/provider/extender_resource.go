@@ -159,7 +159,7 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	var extenderAddressPayload []string
-	if len(data.Permissions.Elements()) > 0 {
+	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
 		if resp.Diagnostics.HasError() {
 			return
