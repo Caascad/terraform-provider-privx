@@ -36,7 +36,6 @@ type ExtenderResourceModel struct {
 	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
 	Name            types.String `tfsdk:"name"`
 	Permissions     types.List   `tfsdk:"permissions"`
-	Secret          types.String `tfsdk:"secret"`
 	WebProxyAddress types.String `tfsdk:"web_proxy_address"`
 	WebProxyPort    types.Int64  `tfsdk:"web_proxy_port"`
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
@@ -77,11 +76,6 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				ElementType:         types.StringType,
 				MarkdownDescription: "Extender permissions",
 				Optional:            true,
-			},
-			"secret": schema.StringAttribute{
-				MarkdownDescription: "Extender secret",
-				Sensitive:           true,
-				Computed:            true,
 			},
 			"web_proxy_address": schema.StringAttribute{
 				MarkdownDescription: "Web Proxy address",
@@ -208,6 +202,18 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	// and set any unknown attribute values.
 	data.ID = types.StringValue(extenderID)
 
+	extenderRead, err := r.client.TrustedClient(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Resource",
+			"An unexpected error occurred while attempting to read the resource.\n"+
+				err.Error(),
+		)
+		return
+	}
+	data.Registered = types.BoolValue(extenderRead.Registered)
+	data.AccessGroupId = types.StringValue(extenderRead.AccessGroupId)
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Debug(ctx, "created extender resource")
@@ -233,7 +239,6 @@ func (r *ExtenderResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	data.Name = types.StringValue(extender.Name)
-	data.Secret = types.StringValue(extender.Secret)
 	data.Registered = types.BoolValue(extender.Registered)
 	data.Enabled = types.BoolValue(extender.Enabled)
 	data.RoutingPrefix = types.StringValue(extender.RoutingPrefix)
@@ -299,7 +304,6 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 
 	extender := userstore.TrustedClient{
 		Name:            data.Name.ValueString(),
-		Secret:          data.Secret.ValueString(),
 		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
