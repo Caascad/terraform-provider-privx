@@ -32,7 +32,7 @@ type ExtenderConfigDataSourceModel struct {
 }
 
 func (r *ExtenderConfigDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_ExtenderConfig"
+	resp.TypeName = req.ProviderTypeName + "_extender_config"
 }
 
 func (r *ExtenderConfigDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
