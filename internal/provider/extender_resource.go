@@ -42,7 +42,7 @@ type ExtenderResourceModel struct {
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
 	Subnets         types.List   `tfsdk:"subnets"`
 	Registered      types.Bool   `tfsdk:"registered"`
-	AccessGroupId   types.String `tfsdk:"registered"`
+	AccessGroupId   types.String `tfsdk:"access_group_id"`
 }
 
 func (r *ExtenderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
