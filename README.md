@@ -45,7 +45,7 @@ go mod vendor
 Then commit the changes to `vendor/`, `go.mod` and `go.sum`.
 
 ### Developing the Provider
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://www.terraform.io/docs/plugin/which-sdk.html) in the Terraform documentation for additional information._
+_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework).
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
 You can use [Nix](https://github.com/NixOS/nix) to easily get all dependencies:
@@ -54,7 +54,7 @@ nix-shell shell.nix
 ```
 
 To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-In order to use the built provider for development, add the following `$HOME/.terraform.rc`
+In order to use the built provider for development, add the following `$HOME/.terraformrc`
 ```
 provider_installation {
 
