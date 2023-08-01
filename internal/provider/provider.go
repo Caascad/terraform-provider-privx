@@ -286,10 +286,12 @@ func (p *privxProvider) Resources(ctx context.Context) []func() resource.Resourc
 
 func (p *privxProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewRoleDataSource,
 		NewAccessGroupDataSource,
-		NewSecretDataSource,
 		NewAPIClientDataSource,
+		NewExtenderDataSource,
+		NewExtenderConfigDataSource,
+		NewRoleDataSource,
+		NewSecretDataSource,
 	}
 }
 
