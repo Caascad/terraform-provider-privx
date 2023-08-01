@@ -8,6 +8,7 @@ in pkgs.mkShell {
     makeWrapper
     go_1_20
     pre-commit
+    golangci-lint
   ];
 
   shellHook = ''

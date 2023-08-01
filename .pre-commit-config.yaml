@@ -1,10 +1,10 @@
 repos:
   - repo: local
     hooks:
-      - id: gofmt
-        name: gofmt
+      - id: lint
+        name: golangci-lint run
         language: system
-        entry: bash -c 'go fmt ./...'
+        entry: bash -c 'golangci-lint run'
         files: '\.go$'
   - repo: local
     hooks:
