@@ -298,6 +298,7 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	extender := userstore.TrustedClient{
+		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
