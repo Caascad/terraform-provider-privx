@@ -30,6 +30,7 @@ resource "privx_extender" "extender-test" {
 
 - `access_group_id` (String) Access Group ID
 - `extender_address` (List of String) Extender addresses
+- `permissions` (List of String) Extender permissions
 - `routing_prefix` (String) Routing Prefix
 - `subnets` (List of String) Subnets
 - `web_proxy_address` (String) Web Proxy address
@@ -38,5 +39,4 @@ resource "privx_extender" "extender-test" {
 ### Read-Only
 
 - `id` (String) Extender ID
-- `permissions` (List of String) Extender permissions
 - `registered` (Boolean) Extender registered
