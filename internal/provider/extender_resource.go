@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,12 +36,12 @@ type ExtenderResourceModel struct {
 	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
 	Name            types.String `tfsdk:"name"`
 	Permissions     types.List   `tfsdk:"permissions"`
-	Secret          types.String `tfsdk:"secret"`
 	WebProxyAddress types.String `tfsdk:"web_proxy_address"`
 	WebProxyPort    types.Int64  `tfsdk:"web_proxy_port"`
 	ExtenderAddress types.List   `tfsdk:"extender_address"`
 	Subnets         types.List   `tfsdk:"subnets"`
 	Registered      types.Bool   `tfsdk:"registered"`
+	AccessGroupId   types.String `tfsdk:"access_group_id"`
 }
 
 func (r *ExtenderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -76,11 +77,6 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Extender permissions",
 				Optional:            true,
 			},
-			"secret": schema.StringAttribute{
-				MarkdownDescription: "Extender secret",
-				Sensitive:           true,
-				Computed:            true,
-			},
 			"web_proxy_address": schema.StringAttribute{
 				MarkdownDescription: "Web Proxy address",
 				Optional:            true,
@@ -99,9 +95,20 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Subnets",
 				Optional:            true,
 			},
+			"access_group_id": schema.StringAttribute{
+				MarkdownDescription: "Access Group ID",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"registered": schema.BoolAttribute{
 				MarkdownDescription: "Extender registered",
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -152,7 +159,7 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	var extenderAddressPayload []string
-	if len(data.Permissions.Elements()) > 0 {
+	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -170,9 +177,9 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	extender := userstore.TrustedClient{
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
-		Registered:      data.Registered.ValueBool(),
 		Enabled:         data.Enabled.ValueBool(),
 		Permissions:     permissionsPayload,
+		AccessGroupId:   data.AccessGroupId.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		Subnets:         extenderSubnetsPayload,
 		RoutingPrefix:   data.RoutingPrefix.ValueString(),
@@ -194,6 +201,18 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	// Convert from the API data model to the Terraform data model
 	// and set any unknown attribute values.
 	data.ID = types.StringValue(extenderID)
+
+	extenderRead, err := r.client.TrustedClient(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Resource",
+			"An unexpected error occurred while attempting to read the resource.\n"+
+				err.Error(),
+		)
+		return
+	}
+	data.Registered = types.BoolValue(extenderRead.Registered)
+	data.AccessGroupId = types.StringValue(extenderRead.AccessGroupId)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -220,7 +239,6 @@ func (r *ExtenderResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	data.Name = types.StringValue(extender.Name)
-	data.Secret = types.StringValue(extender.Secret)
 	data.Registered = types.BoolValue(extender.Registered)
 	data.Enabled = types.BoolValue(extender.Enabled)
 	data.RoutingPrefix = types.StringValue(extender.RoutingPrefix)
@@ -286,11 +304,10 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 
 	extender := userstore.TrustedClient{
 		Name:            data.Name.ValueString(),
-		Secret:          data.Secret.ValueString(),
 		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
+		AccessGroupId:   data.AccessGroupId.ValueString(),
 		Subnets:         extenderSubnetsPayload,
-		Registered:      data.Registered.ValueBool(),
 		Enabled:         data.Enabled.ValueBool(),
 		RoutingPrefix:   data.RoutingPrefix.ValueString(),
 	}
