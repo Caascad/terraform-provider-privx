@@ -126,7 +126,7 @@ func (d *AccessGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	if data.Name.IsNull() && data.Default.IsNull() {
-		resp.Diagnostics.AddError("Configuration Error", fmt.Sprint("Name and Default cannot be null at the same time"))
+		resp.Diagnostics.AddError("Configuration Error", "Name and Default cannot be null at the same time")
 		return
 	}
 	searchResult, err := d.client.AccessGroups(0, 1000, "id", "ASC")

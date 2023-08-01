@@ -38,7 +38,7 @@ type (
 		Source  types.String `tfsdk:"source"`
 	}
 
-	// Principal of the target host
+	// Principal of the target host.
 	PrincipalModel struct {
 		ID             types.String   `tfsdk:"principal"`
 		Roles          []RoleRefModel `tfsdk:"roles"`

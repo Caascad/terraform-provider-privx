@@ -92,6 +92,10 @@ func (r *ExtenderConfigDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 	extender_config, err := GetExtenderConfig(*r.connector, data.TrustedClientID.ValueString(), DownloadHandle.SessionID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Cannot get extender config: %s", err))
+		return
+	}
 
 	data.ExtenderConfig = types.StringValue(extender_config)
 
@@ -104,8 +108,9 @@ func (r *ExtenderConfigDataSource) Read(ctx context.Context, req datasource.Read
 
 func GetExtenderConfig(restapi_connector restapi.Connector, trusted_client_id, session_id string) (string, error) {
 	curl := restapi_connector.URL(fmt.Sprintf("/authorizer/api/v1/extender/conf/%s/%s", trusted_client_id, session_id))
-
 	resp, err := curl.Fetch()
-
-	return string(resp), err
+	if err != nil {
+		return "", err
+	}
+	return string(resp), nil
 }

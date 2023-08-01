@@ -191,7 +191,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	})
 
 	if !data.AccessGroupID.IsUnknown() && data.AccessGroupID.ValueString() == "" {
-		resp.Diagnostics.AddError("Attribute error", fmt.Sprintf("access_group_id cannot be set to empty string"))
+		resp.Diagnostics.AddError("Attribute error", "access_group_id cannot be set to empty string")
 		return
 	}
 
@@ -232,7 +232,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	publicKeyData := []string{"Generating Keys ..."}
 	timeout := 12 * time.Second
 	startTime := time.Now()
-	for true {
+	for {
 		roleRead, err := r.client.Role(roleID)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read role, got error: %s", err))
