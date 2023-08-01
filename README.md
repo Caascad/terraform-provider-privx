@@ -42,11 +42,7 @@ go mod tidy
 go mod vendor
 ```
 
-Then commit the changes to `go.mod` and `go.sum`.
-
-### Using the provider
-
-Fill this in for each provider
+Then commit the changes to `vendor/`, `go.mod` and `go.sum`.
 
 ### Developing the Provider
 _This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://www.terraform.io/docs/plugin/which-sdk.html) in the Terraform documentation for additional information._
