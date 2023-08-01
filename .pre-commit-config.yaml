@@ -1,15 +1,17 @@
 repos:
   - repo: local
     hooks:
-      - id: lint
-        name: golangci-lint run
+      - id: golangci-lint
+        name: Run golangci-lint
         language: system
-        entry: bash -c 'golangci-lint run'
-        files: '\.go$'
+        entry: golangci-lint run
+        pass_filenames: false
+        types: [go, gotmpl]
   - repo: local
     hooks:
-      - id: gogenerate
-        name: go generate
+      - id: go-generate
+        name: Go generate
         language: system
-        entry: bash -c 'go generate'
-        files: '\.go$'
+        entry: go generate
+        pass_filenames: false
+        types: [go, gotmpl]
