@@ -150,14 +150,6 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		"data": fmt.Sprintf("%+v", data),
 	})
 
-	var permissionsPayload []string
-	if len(data.Permissions.Elements()) > 0 {
-		resp.Diagnostics.Append(data.Permissions.ElementsAs(ctx, &permissionsPayload, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	var extenderAddressPayload []string
 	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
@@ -178,7 +170,6 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
 		Enabled:         data.Enabled.ValueBool(),
-		Permissions:     permissionsPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		Subnets:         extenderSubnetsPayload,
@@ -213,6 +204,11 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	data.Registered = types.BoolValue(extenderRead.Registered)
 	data.AccessGroupId = types.StringValue(extenderRead.AccessGroupId)
+	permissions, diags := types.ListValueFrom(ctx, data.Permissions.ElementType(ctx), extenderRead.Permissions)
+	if diags.HasError() {
+		return
+	}
+	data.Permissions = permissions
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -278,14 +274,6 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var permissionsPayload []string
-	if len(data.Permissions.Elements()) > 0 {
-		resp.Diagnostics.Append(data.Permissions.ElementsAs(ctx, &permissionsPayload, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	var extenderAddressPayload []string
 	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
@@ -304,7 +292,6 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 
 	extender := userstore.TrustedClient{
 		Name:            data.Name.ValueString(),
-		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
 		Subnets:         extenderSubnetsPayload,
