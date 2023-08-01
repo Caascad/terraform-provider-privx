@@ -11,5 +11,5 @@ repos:
       - id: gogenerate
         name: go generate
         language: system
-        entry: bash -c 'go generate -v'
+        entry: bash -c 'go generate'
         files: '\.go$'
