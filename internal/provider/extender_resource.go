@@ -150,6 +150,8 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		"data": fmt.Sprintf("%+v", data),
 	})
 
+	var extenderPermissionPayload []string
+
 	var extenderAddressPayload []string
 	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
@@ -170,6 +172,7 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
 		Enabled:         data.Enabled.ValueBool(),
+		Permissions:     extenderPermissionPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		Subnets:         extenderSubnetsPayload,
