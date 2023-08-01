@@ -21,4 +21,4 @@ ExtenderConfig DataSource
 
 ### Read-Only
 
-- `extender_config` (Boolean) Extender enabled
+- `extender_config` (String) Extender config

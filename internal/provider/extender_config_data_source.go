@@ -45,7 +45,7 @@ func (r *ExtenderConfigDataSource) Schema(ctx context.Context, req datasource.Sc
 				Required:            true,
 			},
 			"extender_config": schema.StringAttribute{
-				MarkdownDescription: "Extender enabled",
+				MarkdownDescription: "Extender config",
 				Computed:            true,
 			},
 		},

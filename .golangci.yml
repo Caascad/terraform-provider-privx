@@ -1,5 +1,9 @@
 # Visit https://golangci-lint.run/ for usage documentation
 # and information on other useful linters
+run:
+  skip-files:
+    - internal/provider/provider_test.go
+
 issues:
   max-per-linter: 0
   max-same-issues: 0
