@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -75,7 +76,10 @@ func (r *ExtenderResource) Schema(ctx context.Context, req resource.SchemaReques
 			"permissions": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Extender permissions",
-				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"web_proxy_address": schema.StringAttribute{
 				MarkdownDescription: "Web Proxy address",
@@ -150,13 +154,7 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		"data": fmt.Sprintf("%+v", data),
 	})
 
-	var permissionsPayload []string
-	if len(data.Permissions.Elements()) > 0 {
-		resp.Diagnostics.Append(data.Permissions.ElementsAs(ctx, &permissionsPayload, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
+	var extenderPermissionPayload []string
 
 	var extenderAddressPayload []string
 	if len(data.ExtenderAddress.Elements()) > 0 {
@@ -178,7 +176,7 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
 		Enabled:         data.Enabled.ValueBool(),
-		Permissions:     permissionsPayload,
+		Permissions:     extenderPermissionPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
 		ExtenderAddress: extenderAddressPayload,
 		Subnets:         extenderSubnetsPayload,
@@ -213,6 +211,11 @@ func (r *ExtenderResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	data.Registered = types.BoolValue(extenderRead.Registered)
 	data.AccessGroupId = types.StringValue(extenderRead.AccessGroupId)
+	permissions, diags := types.ListValueFrom(ctx, data.Permissions.ElementType(ctx), extenderRead.Permissions)
+	if diags.HasError() {
+		return
+	}
+	data.Permissions = permissions
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -278,14 +281,6 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var permissionsPayload []string
-	if len(data.Permissions.Elements()) > 0 {
-		resp.Diagnostics.Append(data.Permissions.ElementsAs(ctx, &permissionsPayload, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	var extenderAddressPayload []string
 	if len(data.ExtenderAddress.Elements()) > 0 {
 		resp.Diagnostics.Append(data.ExtenderAddress.ElementsAs(ctx, &extenderAddressPayload, false)...)
@@ -303,8 +298,8 @@ func (r *ExtenderResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	extender := userstore.TrustedClient{
+		Type:            userstore.ClientExtender,
 		Name:            data.Name.ValueString(),
-		Permissions:     permissionsPayload,
 		ExtenderAddress: extenderAddressPayload,
 		AccessGroupId:   data.AccessGroupId.ValueString(),
 		Subnets:         extenderSubnetsPayload,
