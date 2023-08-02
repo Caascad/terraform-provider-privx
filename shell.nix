@@ -7,14 +7,5 @@ in pkgs.mkShell {
     git
     makeWrapper
     go_1_20
-    pre-commit
-    golangci-lint
   ];
-
-  shellHook = ''
-      #-------------------------------------------------------
-      # pre-commit for git
-      #-------------------------------------------------------
-      [ -f "${rootDir}/.git/hooks/pre-commit" ] || pre-commit install
-  '';
 }
