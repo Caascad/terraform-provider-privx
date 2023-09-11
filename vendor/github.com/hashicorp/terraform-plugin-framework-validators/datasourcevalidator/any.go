@@ -1,14 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package setvalidator
+package datasourcevalidator
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
 // Any returns a validator which ensures that any configured attribute value
@@ -18,17 +18,17 @@ import (
 // conflicting logic, only warnings from the passing validator are returned.
 // Use AnyWithAllWarnings() to return warnings from non-passing validators
 // as well.
-func Any(validators ...validator.Set) validator.Set {
+func Any(validators ...datasource.ConfigValidator) datasource.ConfigValidator {
 	return anyValidator{
 		validators: validators,
 	}
 }
 
-var _ validator.Set = anyValidator{}
+var _ datasource.ConfigValidator = anyValidator{}
 
 // anyValidator implements the validator.
 type anyValidator struct {
-	validators []validator.Set
+	validators []datasource.ConfigValidator
 }
 
 // Description describes the validation in plain text formatting.
@@ -47,12 +47,12 @@ func (v anyValidator) MarkdownDescription(ctx context.Context) string {
 	return v.Description(ctx)
 }
 
-// ValidateSet performs the validation.
-func (v anyValidator) ValidateSet(ctx context.Context, req validator.SetRequest, resp *validator.SetResponse) {
+// ValidateDataSource performs the validation.
+func (v anyValidator) ValidateDataSource(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
 	for _, subValidator := range v.validators {
-		validateResp := &validator.SetResponse{}
+		validateResp := &datasource.ValidateConfigResponse{}
 
-		subValidator.ValidateSet(ctx, req, validateResp)
+		subValidator.ValidateDataSource(ctx, req, validateResp)
 
 		if !validateResp.Diagnostics.HasError() {
 			resp.Diagnostics = validateResp.Diagnostics
