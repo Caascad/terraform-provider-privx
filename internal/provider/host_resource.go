@@ -7,9 +7,16 @@ import (
 	"github.com/SSHcom/privx-sdk-go/api/hoststore"
 	"github.com/SSHcom/privx-sdk-go/restapi"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -53,11 +60,6 @@ type (
 		Fingerprint types.String `tfsdk:"fingerprint"`
 	}
 
-	StatusModel struct {
-		K types.String `tfsdk:"k"`
-		V types.String `tfsdk:"v"`
-	}
-
 	HostResourceModel struct {
 		ID                  types.String        `tfsdk:"id"`
 		AccessGroupID       types.String        `tfsdk:"access_group_id"`
@@ -86,7 +88,6 @@ type (
 		Services            []ServiceModel      `tfsdk:"services"`
 		Principals          []PrincipalModel    `tfsdk:"principals"`
 		PublicKeys          []SSHPublicKeyModel `tfsdk:"ssh_host_public_keys"`
-		Status              []StatusModel       `tfsdk:"status"`
 	}
 )
 
@@ -98,11 +99,13 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Host resource",
-
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Host ID",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"access_group_id": schema.StringAttribute{
 				MarkdownDescription: "Defines host's access group",
@@ -144,7 +147,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "X.500 Organization (searchable by keyword)",
 				Optional:            true,
 			},
-			"organization_unit": schema.StringAttribute{
+			"organizational_unit": schema.StringAttribute{
 				MarkdownDescription: "X.500 Organizational unit (searchable by keyword)",
 				Optional:            true,
 			},
@@ -152,7 +155,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Equipment zone (development, production, user acceptance testing, ..) (searchable by keyword)",
 				Optional:            true,
 			},
-			"hoste_type": schema.StringAttribute{
+			"host_type": schema.StringAttribute{
 				MarkdownDescription: "Equipment type (virtual, physical) (searchable by keyword)",
 				Optional:            true,
 			},
@@ -165,11 +168,14 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 			"disabled": schema.StringAttribute{
-				MarkdownDescription: `disabled ("BY_ADMIN" | "BY_LISCENCE" | "false")`,
+				MarkdownDescription: `disabled ("BY_ADMIN" | "BY_LISCENCE" | "FALSE")`,
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
-					stringvalidator.OneOf("BY_ADMIN", "BY_LISCENCE", "false"),
+					stringvalidator.OneOf("BY_ADMIN", "BY_LISCENCE", "FALSE"),
 				},
 			},
 			"deployable": schema.BoolAttribute{
@@ -178,7 +184,12 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"tofu": schema.BoolAttribute{
 				MarkdownDescription: "Whether the host key should be accepted and stored on first connection",
+				Computed:            true,
 				Optional:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+				Default: booldefault.StaticBool(false),
 			},
 			"stand_alone_host": schema.BoolAttribute{
 				MarkdownDescription: "Indicates it is a standalone host - bound to local host directory",
@@ -197,17 +208,23 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType:         types.StringType,
 				MarkdownDescription: "Host tags",
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{
+						},
+					),
+				),
 			},
 			"addresses": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Host addresses",
 				Optional:            true,
 			},
-			"certificate_template": schema.StringAttribute{
-				MarkdownDescription: "Name of the certificate template used for certificate authentication for this host",
-				Optional:            true,
-			},
-
 			"services": schema.SingleNestedAttribute{
 				MarkdownDescription: "Host services",
 				Optional:            true,
@@ -518,6 +535,18 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
+			"ssh_host_public_keys": schema.SetNestedAttribute{
+				MarkdownDescription: "Host public keys, used to verify the identity of the accessed host",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							MarkdownDescription: "Host public key, used to verify the identity of the accessed host",
+							Required:            true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -600,6 +629,14 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// Convert from the API data model to the Terraform data model
 	// and set any unknown attribute values.
 	data.ID = types.StringValue(hostID)
+
+	HostRead, err := r.client.Host(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read host, got error: %s", err))
+		return
+	}
+
+	data.Disabled = types.StringValue(HostRead.Disabled)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
