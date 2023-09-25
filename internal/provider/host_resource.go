@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/SSHcom/privx-sdk-go/api/hoststore"
+	"github.com/SSHcom/privx-sdk-go/api/rolestore"
 	"github.com/SSHcom/privx-sdk-go/restapi"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -32,20 +33,85 @@ type (
 	}
 
 	ServiceModel struct {
-		Scheme  types.String `tfsdk:"service"`
-		Address types.String `tfsdk:"address"`
-		Port    types.Int64  `tfsdk:"port"`
-		Source  types.String `tfsdk:"source"`
+		Scheme                 types.String `tfsdk:"service"`
+		Address                types.String `tfsdk:"address"`
+		Port                   types.Int64  `tfsdk:"port"`
+		Source                 types.String `tfsdk:"source"`
+		UseForPasswordRotation types.Bool   `tfsdk:"use_for_password_rotation"`
 	}
 
-	// Principal of the target host.
+	ApplicationModel struct {
+		Name             types.String `tfsdk:"name"`
+		Application      types.String `tfsdk:"application"`
+		Arguments        types.String `tfsdk:"arguments"`
+		WorkingDirectory types.String `tfsdk:"working_directory"`
+	}
+
+	SSHServiceModel struct {
+		shell        types.Bool `tfsdk:"shell"`
+		FileTransfer types.Bool `tfsdk:"file_transfer"`
+		Exec         types.Bool `tfsdk:"exec"`
+		Tunnels      types.Bool `tfsdk:"tunnels"`
+		X11          types.Bool `tfsdk:"x11"`
+		Other        types.Bool `tfsdk:"other"`
+	}
+
+	RDPServiceModel struct {
+		FileTransfer types.Bool `tfsdk:"file_transfer"`
+		Audio        types.Bool `tfsdk:"audio"`
+		clipboard    types.Bool `tfsdk:"clipboard"`
+	}
+
+	ServiceOptionsModel struct {
+		SSH SSHServiceModel `tfsdk:"ssh"`
+		RDP RDPServiceModel `tfsdk:"rdp"`
+		Web RDPServiceModel `tfsdk:"Web"` //RDP and Web models are the same
+	}
+
+	WhitelistModel struct {
+		ID      types.String `tfsdk:"id"`
+		Name    types.String `tfsdk:"name"`
+		Deleted types.Bool   `tfsdk:"deleted"`
+	}
+
+	CommandRestrictionsModel struct {
+		RShellVariant    types.String     `tfsdk:"rshell_variant"`
+		Banner           types.String     `tfsdk:"banner"`
+		Enabled          types.Bool       `tfsdk:"enabled"`
+		AllowNoMatch     types.Bool       `tfsdk:"allow_no_match"`
+		AuditMatch       types.Bool       `tfsdk:"audit_match"`
+		AuditNoMatch     types.Bool       `tfsdk:"audit_no_match"`
+		DefalutWhitelist WhitelistModel   `tfsdk:"default_whitelist"`
+		Whitelists       []WhitelistModel `tfsdk:"whitelists"`
+	}
+
+	PasswordRotationStatusModel struct {
+	}
+
+	PasswordRotationModel struct {
+		OperatingSystem  types.String `tfsdk:"operating_system"`
+		WINRMAddress     types.String `tfsdk:"winrm_address"`
+		WINRMPort        types.String `tfsdk:"winrm_port"`
+		Protocol         types.String `tfsdk:"protocol"`
+		PasswordPolicyID types.String `tfsdk:"password_policy_id"`
+		ScriptTemplateID types.String `tfsdk:"script_template_id"`
+		UseMainAccount   types.Bool   `tfsdk:"use_main_account"`
+	}
+
+	// Principal of the target host
 	PrincipalModel struct {
-		ID             types.String   `tfsdk:"principal"`
-		Roles          []RoleRefModel `tfsdk:"roles"`
-		Source         types.String   `tfsdk:"source"`
-		UseUserAccount types.Bool     `tfsdk:"use_user_account"`
-		Passphrase     types.String   `tfsdk:"passphrase"`
-		Applications   []string       `tfsdk:"applications"`
+		ID                      types.String             `tfsdk:"principal"`
+		Passphrase              types.String             `tfsdk:"passphrase"`
+		Source                  types.String             `tfsdk:"source"`
+		Rotate                  types.Bool               `tfsdk:"rotate"`
+		UseForPasswordRotation  types.Bool               `tfsdk:"use_for_password_rotation"`
+		PasswordRotationEnabled types.Bool               `tfsdk:"password_rotation_enabled"`
+		UseUserAccount          types.Bool               `tfsdk:"use_user_account"`
+		PasswordRotation        PasswordRotationModel    `tfsdk:"password_rotation"`
+		ServiceOptions          ServiceOptionsModel      `tfsdk:"service_options"`
+		CommandRestrictions     CommandRestrictionsModel `tfsdk:"command_restrictions"`
+		Roles                   []RoleRefModel           `tfsdk:"roles"`
+		Applications            []ApplicationModel       `tfsdk:"applications"`
 	}
 
 	SSHPublicKeyModel struct {
@@ -74,6 +140,7 @@ type (
 		Zone                types.String        `tfsdk:"zone"`
 		HostType            types.String        `tfsdk:"host_type"`
 		HostClassification  types.String        `tfsdk:"host_classification"`
+		HostCertificateRaw  types.String        `tfsdk:"host_certificate_raw"`
 		Comment             types.String        `tfsdk:"comment"`
 		Disabled            types.String        `tfsdk:"disabled"`
 		Deployable          types.Bool          `tfsdk:"deployable"`
@@ -208,34 +275,35 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 
-			"services": schema.SingleNestedAttribute{
+			"services": schema.SetNestedAttribute{
 				MarkdownDescription: "Host services",
 				Optional:            true,
-				/* ... */
-				Attributes: map[string]schema.Attribute{
-					"service": schema.StringAttribute{
-						MarkdownDescription: "Allowed protocol - SSH, RDP, VNC, HTTP, HTTPS (searchable)",
-						Optional:            true,
-						Validators: []validator.String{
-							// These are example validators from terraform-plugin-framework-validators
-							stringvalidator.OneOf("SSH", "RDP", "VNC", "HTTP", "HTTPS"),
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"service": schema.StringAttribute{
+							MarkdownDescription: "Allowed protocol - SSH, RDP, VNC, HTTP, HTTPS (searchable)",
+							Optional:            true,
+							Validators: []validator.String{
+								// These are example validators from terraform-plugin-framework-validators
+								stringvalidator.OneOf("SSH", "RDP", "VNC", "HTTP", "HTTPS"),
+							},
 						},
-					},
-					"address": schema.StringAttribute{
-						MarkdownDescription: "Service address, IPv4, IPv6 or FQDN",
-						Optional:            true,
-					},
-					"port": schema.Int64Attribute{
-						MarkdownDescription: "Service port",
-						Optional:            true,
-					},
-					"source": schema.StringAttribute{
-						MarkdownDescription: `Identifies the source of the services object "UI", "SCIM" or "SCAN". Deploy is also treated as "UI.`,
-						Optional:            true,
-					},
-					"use_for_password_rotation": schema.BoolAttribute{
-						MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
-						Optional:            true,
+						"address": schema.StringAttribute{
+							MarkdownDescription: "Service address, IPv4, IPv6 or FQDN",
+							Optional:            true,
+						},
+						"port": schema.Int64Attribute{
+							MarkdownDescription: "Service port",
+							Optional:            true,
+						},
+						"source": schema.StringAttribute{
+							MarkdownDescription: `Identifies the source of the services object "UI", "SCIM" or "SCAN". Deploy is also treated as "UI.`,
+							Optional:            true,
+						},
+						"use_for_password_rotation": schema.BoolAttribute{
+							MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
+							Optional:            true,
+						},
 					},
 				},
 			},
@@ -301,7 +369,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"service_option": schema.SingleNestedAttribute{
+						"service_options": schema.SingleNestedAttribute{
 							MarkdownDescription: "Object for service options",
 							Optional:            true,
 							Attributes: map[string]schema.Attribute{
@@ -558,6 +626,12 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 		"data": fmt.Sprintf("%+v", data),
 	})
 
+	scopePayload := make([]string, len(data.Scope.Elements()))
+	resp.Diagnostics.Append(data.Scope.ElementsAs(ctx, &scopePayload, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tagsPayload := make([]string, len(data.Tags.Elements()))
 	resp.Diagnostics.Append(data.Tags.ElementsAs(ctx, &tagsPayload, false)...)
 	if resp.Diagnostics.HasError() {
@@ -570,6 +644,58 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	var servicesPayload []hoststore.Service
+	for _, service := range data.Services {
+		servicesPayload = append(servicesPayload,
+			hoststore.Service{
+				Scheme:  hoststore.Scheme(service.Scheme.ValueString()),
+				Address: hoststore.Address(service.Address.ValueString()),
+				Port:    int(service.Port.ValueInt64()),
+				// UseForPasswordRotation: service.UseForPasswordRotation.ValueBool(), // FIXME: Not implemented
+			})
+	}
+
+	var principalsPayload []hoststore.Principal
+	for _, principal := range data.Principals {
+		var rolesPayload []rolestore.RoleRef
+		for _, role := range principal.Roles {
+			rolesPayload = append(rolesPayload,
+				rolestore.RoleRef{
+					ID:   role.ID.ValueString(),
+					Name: role.Name.ValueString(),
+				})
+		}
+		/* FIXME: object application not implemented, principal only takes []string
+		var applicationsPayload []hoststore.Application
+		for _, application := range principal.Applications {
+			applicationsPayload = append(applicationsPayload,
+			hoststore.Application {
+				Name: application.Name.ValueString(),
+				Application: application.Applictaion.ValueString(),
+				Arguments: application.Arguments.ValueString(),
+				WorkingDirectory: application.WorkingDirectory.ValueString(),
+			})
+		}
+		*/
+		var applicationsPayload []string
+		for _, application := range principal.Applications {
+			applicationsPayload = append(applicationsPayload,
+				application.Name.ValueString())
+		}
+
+		principalsPayload = append(principalsPayload,
+			hoststore.Principal{
+				ID: principal.ID.ValueString(),
+				//	Rotate: principal.Rotate.ValueBool(), // FIXME: Not implemented
+				//	UseForPasswordRotation: principal.UseForPasswordRotation.ValueBool(), // FIXME: Not implemented
+				UseUserAccount: principal.UseUserAccount.ValueBool(),
+				Passphrase:     principal.Passphrase.ValueString(),
+				Source:         hoststore.Source(principal.Source.ValueString()),
+				Roles:          rolesPayload,
+				Applications:   applicationsPayload,
+			})
+	}
+
 	host := hoststore.Host{
 		AccessGroupID:       data.AccessGroupID.ValueString(),
 		ExternalID:          data.ExternalID.ValueString(),
@@ -580,8 +706,23 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 		ContactAdress:       data.ContactAddress.ValueString(),
 		CloudProvider:       data.CloudProvider.ValueString(),
 		CloudProviderRegion: data.CloudProviderRegion.ValueString(),
-		Tags:                tagsPayload,
-		Addresses:           addressesPayload,
+		DistinguishedName:   data.DistinguishedName.ValueString(),
+		Organization:        data.Organization.ValueString(),
+		OrganizationUnit:    data.OrganizationUnit.ValueString(),
+		Zone:                data.Zone.ValueString(),
+		HostType:            data.HostType.ValueString(),
+		HostClassification:  data.HostClassification.ValueString(),
+		//		HostCertificateRaw:  data.HostCertificateRaw.ValueString(), // FIXME: Not implemented
+		Comment:    data.Comment.ValueString(),
+		Disabled:   data.Disabled.ValueString(),
+		Deployable: data.Deployable.ValueBool(),
+		StandAlone: data.StandAlone.ValueBool(),
+		Audit:      data.Audit.ValueBool(),
+		Scope:      scopePayload,
+		Tags:       tagsPayload,
+		Addresses:  addressesPayload,
+		Services:   servicesPayload,
+		Principals: principalsPayload,
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("hoststore.Host model used: %+v", host))
