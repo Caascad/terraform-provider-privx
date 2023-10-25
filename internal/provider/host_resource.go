@@ -37,7 +37,7 @@ type (
 		Address                types.String `tfsdk:"address"`
 		Port                   types.Int64  `tfsdk:"port"`
 		Source                 types.String `tfsdk:"source"`
-		UseForPasswordRotation types.Bool   `tfsdk:"use_for_password_rotation"`
+		UseForPasswordRotation types.Bool   `tfsdk:"use_for_password_rotation"` // FIXME: Not implemented in privx-sdk-go v1.29.0
 	}
 
 	ApplicationModel struct {
@@ -85,10 +85,7 @@ type (
 		Whitelists       []WhitelistModel `tfsdk:"whitelists"`
 	}
 
-	PasswordRotationStatusModel struct {
-	}
-
-	PasswordRotationModel struct {
+	PasswordRotationModel struct { // FIXME: Not implemented in privx-sdk-go v1.29.0
 		OperatingSystem  types.String `tfsdk:"operating_system"`
 		WINRMAddress     types.String `tfsdk:"winrm_address"`
 		WINRMPort        types.String `tfsdk:"winrm_port"`
@@ -100,18 +97,17 @@ type (
 
 	// Principal of the target host
 	PrincipalModel struct {
-		ID                      types.String             `tfsdk:"principal"`
-		Passphrase              types.String             `tfsdk:"passphrase"`
-		Source                  types.String             `tfsdk:"source"`
-		Rotate                  types.Bool               `tfsdk:"rotate"`
-		UseForPasswordRotation  types.Bool               `tfsdk:"use_for_password_rotation"`
-		PasswordRotationEnabled types.Bool               `tfsdk:"password_rotation_enabled"`
-		UseUserAccount          types.Bool               `tfsdk:"use_user_account"`
-		PasswordRotation        PasswordRotationModel    `tfsdk:"password_rotation"`
-		ServiceOptions          ServiceOptionsModel      `tfsdk:"service_options"`
-		CommandRestrictions     CommandRestrictionsModel `tfsdk:"command_restrictions"`
-		Roles                   []RoleRefModel           `tfsdk:"roles"`
-		Applications            []ApplicationModel       `tfsdk:"applications"`
+		ID             types.String       `tfsdk:"principal"`
+		Passphrase     types.String       `tfsdk:"passphrase"`
+		Source         types.String       `tfsdk:"source"`
+		UseUserAccount types.Bool         `tfsdk:"use_user_account"`
+		Roles          []RoleRefModel     `tfsdk:"roles"`
+		Applications   []ApplicationModel `tfsdk:"applications"`
+
+		Rotate                 types.Bool               `tfsdk:"rotate"`                    // FIXME: Not implemented in privx-sdk-go v1.29.0
+		UseForPasswordRotation types.Bool               `tfsdk:"use_for_password_rotation"` // FIXME: Not implemented in privx-sdk-go v1.29.0
+		ServiceOptions         ServiceOptionsModel      `tfsdk:"service_options"`           // FIXME: Not implemented in privx-sdk-go v1.29.0
+		CommandRestrictions    CommandRestrictionsModel `tfsdk:"command_restrictions"`      // FIXME: Not implemented in privx-sdk-go v1.29.0
 	}
 
 	SSHPublicKeyModel struct {
@@ -140,7 +136,6 @@ type (
 		Zone                types.String        `tfsdk:"zone"`
 		HostType            types.String        `tfsdk:"host_type"`
 		HostClassification  types.String        `tfsdk:"host_classification"`
-		HostCertificateRaw  types.String        `tfsdk:"host_certificate_raw"`
 		Comment             types.String        `tfsdk:"comment"`
 		Disabled            types.String        `tfsdk:"disabled"`
 		Deployable          types.Bool          `tfsdk:"deployable"`
@@ -154,6 +149,11 @@ type (
 		Principals          []PrincipalModel    `tfsdk:"principals"`
 		PublicKeys          []SSHPublicKeyModel `tfsdk:"ssh_host_public_keys"`
 		Status              []StatusModel       `tfsdk:"status"`
+
+		CertificateTemplate     types.String          `tfsdk:"certificate_template"`      // FIXME: Not implemented in privx-sdk-go v1.29.0
+		HostCertificateRaw      types.String          `tfsdk:"host_certificate_raw"`      // FIXME: Not implemented in privx-sdk-go v1.29.0
+		PasswordRotationEnabled types.Bool            `tfsdk:"password_rotation_enabled"` // FIXME: Not implemented in privx-sdk-go v1.29.0
+		PasswordRotation        PasswordRotationModel `tfsdk:"password_rotation"`         // FIXME: Not implemented in privx-sdk-go v1.29.0
 	}
 )
 
@@ -211,7 +211,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "X.500 Organization (searchable by keyword)",
 				Optional:            true,
 			},
-			"organization_unit": schema.StringAttribute{
+			"organizational_unit": schema.StringAttribute{
 				MarkdownDescription: "X.500 Organizational unit (searchable by keyword)",
 				Optional:            true,
 			},
@@ -219,7 +219,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Equipment zone (development, production, user acceptance testing, ..) (searchable by keyword)",
 				Optional:            true,
 			},
-			"hoste_type": schema.StringAttribute{
+			"host_type": schema.StringAttribute{
 				MarkdownDescription: "Equipment type (virtual, physical) (searchable by keyword)",
 				Optional:            true,
 			},
@@ -231,6 +231,12 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A comment describing the host",
 				Optional:            true,
 			},
+			/* FIXME: Not implemented in privx-sdk-go v1.29.0
+			"host_certificate_raw": schema.StringAttribute{
+				MarkdownDescription: "Host certificate, used to verify that the target host is the correct one.",
+				Optional:            true,
+			},
+			*/
 			"disabled": schema.StringAttribute{
 				MarkdownDescription: `disabled ("BY_ADMIN" | "BY_LISCENCE" | "false")`,
 				Optional:            true,
@@ -270,11 +276,24 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Host addresses",
 				Optional:            true,
 			},
+			/* FIXME: Not implemented in privx-sdk-go v1.29.0
 			"certificate_template": schema.StringAttribute{
 				MarkdownDescription: "Name of the certificate template used for certificate authentication for this host",
 				Optional:            true,
 			},
-
+			*/
+			"ssh_host_public_keys": schema.SetNestedAttribute{
+				MarkdownDescription: "Host public keys, used to verify the identity of the accessed host",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							MarkdownDescription: "Host public key, used to verify the identity of the accessed host",
+							Optional:            true,
+						},
+					},
+				},
+			},
 			"services": schema.SetNestedAttribute{
 				MarkdownDescription: "Host services",
 				Optional:            true,
@@ -284,7 +303,6 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							MarkdownDescription: "Allowed protocol - SSH, RDP, VNC, HTTP, HTTPS (searchable)",
 							Optional:            true,
 							Validators: []validator.String{
-								// These are example validators from terraform-plugin-framework-validators
 								stringvalidator.OneOf("SSH", "RDP", "VNC", "HTTP", "HTTPS"),
 							},
 						},
@@ -300,10 +318,12 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							MarkdownDescription: `Identifies the source of the services object "UI", "SCIM" or "SCAN". Deploy is also treated as "UI.`,
 							Optional:            true,
 						},
-						"use_for_password_rotation": schema.BoolAttribute{
-							MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
-							Optional:            true,
-						},
+						/*
+							"use_for_password_rotation": schema.BoolAttribute{
+								MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
+								Optional:            true,
+							},
+						*/
 					},
 				},
 			},
@@ -316,6 +336,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							MarkdownDescription: "The account name",
 							Optional:            true,
 						},
+						/* FIXME: Not implemented in privx-sdk-go v1.29.0
 						"rotate": schema.BoolAttribute{
 							MarkdownDescription: "Rotate password of this account",
 							Optional:            true,
@@ -324,6 +345,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							MarkdownDescription: "marks account to be used as the account through which password rotation takes place, when flag use_main_account set in rotation_metadata",
 							Optional:            true,
 						},
+						*/
 
 						"use_user_account": schema.StringAttribute{
 							MarkdownDescription: "Use user account as host principal name",
@@ -331,6 +353,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 						},
 						"passphrase": schema.StringAttribute{
 							MarkdownDescription: "The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit",
+							Sensitive:           true,
 							Optional:            true,
 						},
 						"source": schema.StringAttribute{
@@ -357,6 +380,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"name": schema.StringAttribute{
 										Optional: true,
 									},
+									/* FIXME: Not implemented in privx-sdk-go v1.29.0
 									"application": schema.StringAttribute{
 										Optional: true,
 									},
@@ -366,9 +390,11 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"working_directory": schema.StringAttribute{
 										Optional: true,
 									},
+									*/
 								},
 							},
 						},
+						/* FIXME: Not implemented in privx-sdk-go v1.29.0
 						"service_options": schema.SingleNestedAttribute{
 							MarkdownDescription: "Object for service options",
 							Optional:            true,
@@ -539,53 +565,58 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"password_rotation_enabled": schema.BoolAttribute{
-							MarkdownDescription: "set, if there are accounts, in which passwords need to be rotated",
-							Optional:            true,
-						},
-						"password_rotation": schema.SingleNestedAttribute{
-							MarkdownDescription: "password rotation settings for host",
-							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"use_main_account": schema.BoolAttribute{
-									MarkdownDescription: "rotate passwords of all accounts in host through one account",
-									Required:            true,
-								},
-								"operating_system": schema.StringAttribute{
-									MarkdownDescription: "Bash for Linux, Powershell for windows for shell access (LINUX | WINDOWS)",
-									Required:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("LINUX", "WINDOWS"),
-									},
-								},
-								"winrm_address": schema.StringAttribute{
-									MarkdownDescription: "IPv4 address or FQDN to use for winrm connection",
-									Optional:            true,
-								},
-								"winrm_port": schema.Int64Attribute{
-									MarkdownDescription: "port to use for password rotation with winrm, zero for winrm default",
-									Optional:            true,
-								},
-								"protocol": schema.StringAttribute{
-									MarkdownDescription: "protocol (SSH | WINRM)",
-									Required:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("SSH", "WINRM"),
-									},
-								},
-								"password_policy_id": schema.StringAttribute{
-									MarkdownDescription: "password policy to be applied",
-									Required:            true,
-								},
-								"script_template_id": schema.StringAttribute{
-									MarkdownDescription: "script template to be run in host",
-									Required:            true,
-								},
-							},
-						},
+						*/
 					},
 				},
 			},
+			/* FIXME: Not implemented in privx-sdk-go v1.29.0
+			"password_rotation_enabled": schema.BoolAttribute{
+				MarkdownDescription: "set, if there are accounts, in which passwords need to be rotated",
+				Optional:            true,
+			},
+			*/
+			/* FIXME: Not implemented in privx-sdk-go v1.29.0
+			"password_rotation": schema.SingleNestedAttribute{
+				MarkdownDescription: "password rotation settings for host",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"use_main_account": schema.BoolAttribute{
+						MarkdownDescription: "rotate passwords of all accounts in host through one account",
+						Required:            true,
+					},
+					"operating_system": schema.StringAttribute{
+						MarkdownDescription: "Bash for Linux, Powershell for windows for shell access (LINUX | WINDOWS)",
+						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("LINUX", "WINDOWS"),
+						},
+					},
+					"winrm_address": schema.StringAttribute{
+						MarkdownDescription: "IPv4 address or FQDN to use for winrm connection",
+						Optional:            true,
+					},
+					"winrm_port": schema.Int64Attribute{
+						MarkdownDescription: "port to use for password rotation with winrm, zero for winrm default",
+						Optional:            true,
+					},
+					"protocol": schema.StringAttribute{
+						MarkdownDescription: "protocol (SSH | WINRM)",
+						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("SSH", "WINRM"),
+						},
+					},
+					"password_policy_id": schema.StringAttribute{
+						MarkdownDescription: "password policy to be applied",
+						Required:            true,
+					},
+					"script_template_id": schema.StringAttribute{
+						MarkdownDescription: "script template to be run in host",
+						Required:            true,
+					},
+				},
+			},
+			*/
 		},
 	}
 }
@@ -651,7 +682,7 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 				Scheme:  hoststore.Scheme(service.Scheme.ValueString()),
 				Address: hoststore.Address(service.Address.ValueString()),
 				Port:    int(service.Port.ValueInt64()),
-				// UseForPasswordRotation: service.UseForPasswordRotation.ValueBool(), // FIXME: Not implemented
+				// UseForPasswordRotation: service.UseForPasswordRotation.ValueBool(), // FIXME: Not implemented in privx-sdk-go v1.29.0
 			})
 	}
 
@@ -665,7 +696,7 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 					Name: role.Name.ValueString(),
 				})
 		}
-		/* FIXME: object application not implemented, principal only takes []string
+		/* FIXME: object application not implemented, principal only takes []string.
 		var applicationsPayload []hoststore.Application
 		for _, application := range principal.Applications {
 			applicationsPayload = append(applicationsPayload,
@@ -685,9 +716,7 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 		principalsPayload = append(principalsPayload,
 			hoststore.Principal{
-				ID: principal.ID.ValueString(),
-				//	Rotate: principal.Rotate.ValueBool(), // FIXME: Not implemented
-				//	UseForPasswordRotation: principal.UseForPasswordRotation.ValueBool(), // FIXME: Not implemented
+				ID:             principal.ID.ValueString(),
 				UseUserAccount: principal.UseUserAccount.ValueBool(),
 				Passphrase:     principal.Passphrase.ValueString(),
 				Source:         hoststore.Source(principal.Source.ValueString()),
@@ -696,12 +725,19 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 			})
 	}
 
+	var publicKeysPayload []hoststore.SSHPublicKey
+	for _, SSHKey := range data.PublicKeys {
+		publicKeysPayload = append(publicKeysPayload,
+			hoststore.SSHPublicKey{
+				Key: SSHKey.Key.ValueString(),
+			})
+	}
+
 	host := hoststore.Host{
 		AccessGroupID:       data.AccessGroupID.ValueString(),
 		ExternalID:          data.ExternalID.ValueString(),
 		InstanceID:          data.InstanceID.ValueString(),
 		SourceID:            data.SourceID.ValueString(),
-		Tofu:                data.Tofu.ValueBool(),
 		Name:                data.Name.ValueString(),
 		ContactAdress:       data.ContactAddress.ValueString(),
 		CloudProvider:       data.CloudProvider.ValueString(),
@@ -712,17 +748,18 @@ func (r *HostResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Zone:                data.Zone.ValueString(),
 		HostType:            data.HostType.ValueString(),
 		HostClassification:  data.HostClassification.ValueString(),
-		//		HostCertificateRaw:  data.HostCertificateRaw.ValueString(), // FIXME: Not implemented
-		Comment:    data.Comment.ValueString(),
-		Disabled:   data.Disabled.ValueString(),
-		Deployable: data.Deployable.ValueBool(),
-		StandAlone: data.StandAlone.ValueBool(),
-		Audit:      data.Audit.ValueBool(),
-		Scope:      scopePayload,
-		Tags:       tagsPayload,
-		Addresses:  addressesPayload,
-		Services:   servicesPayload,
-		Principals: principalsPayload,
+		Comment:             data.Comment.ValueString(),
+		Disabled:            data.Disabled.ValueString(),
+		Deployable:          data.Deployable.ValueBool(),
+		Tofu:                data.Tofu.ValueBool(),
+		StandAlone:          data.StandAlone.ValueBool(),
+		Audit:               data.Audit.ValueBool(),
+		Scope:               scopePayload,
+		Tags:                tagsPayload,
+		Addresses:           addressesPayload,
+		Services:            servicesPayload,
+		Principals:          principalsPayload,
+		PublicKeys:          publicKeysPayload,
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("hoststore.Host model used: %+v", host))
