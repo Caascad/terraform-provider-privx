@@ -330,7 +330,9 @@ func (r *SourceResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	var eum []*EUMModel
 	for _, v := range source.ExternalUserMapping {
-		eum = append(eum, &EUMModel{types.StringValue(v.SourceID), types.StringValue(v.SourceSeaerchField)})
+		eum = append(eum, &EUMModel{
+			types.StringValue(v.SourceID),
+			types.StringValue(v.SourceSeaerchField)})
 	}
 
 	scopesSecret, diags := types.ListValueFrom(ctx, data.OIDCConnection.ScopesSecret.ElementType(ctx), source.Connection.OIDCScopesSecret)
