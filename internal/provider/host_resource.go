@@ -34,8 +34,16 @@ type (
 	ServiceModel struct {
 		Scheme  types.String `tfsdk:"service"`
 		Address types.String `tfsdk:"address"`
-		Port    types.Int64  `tfsdk:"port"`
+		Port    types.Number  `tfsdk:"port"`
 		Source  types.String `tfsdk:"source"`
+	}
+
+
+	ApplicationModel struct{
+		Name types.String `tfsdk:"name"`
+		Application types.String `tfsdk:"application"`
+		Arguments types.String `tfsdk:"arguments"`
+		working_directory types.String `tfsdk:"working_directory"`
 	}
 
 	// Principal of the target host.
@@ -45,7 +53,12 @@ type (
 		Source         types.String   `tfsdk:"source"`
 		UseUserAccount types.Bool     `tfsdk:"use_user_account"`
 		Passphrase     types.String   `tfsdk:"passphrase"`
-		Applications   []string       `tfsdk:"applications"`
+		Applications   []ApplicationModel       `tfsdk:"applications"`
+		Rotate types.Bool     `tfsdk:"rotate"`
+		UseForPasswordRotation types.Bool     `tfsdk:"use_for_password_rotation"`
+		// CommandRestrictions []types.String  `tfsdk:"command_restrictions"`
+		// password_rotation []types.String  `tfsdk:"command_restrictions"`
+		// PasswordRotationEnabled  types.Bool     `tfsdk:"password_rotation_enabled"`
 	}
 
 	SSHPublicKeyModel struct {
@@ -144,7 +157,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "X.500 Organization (searchable by keyword)",
 				Optional:            true,
 			},
-			"organization_unit": schema.StringAttribute{
+			"organizational_unit": schema.StringAttribute{
 				MarkdownDescription: "X.500 Organizational unit (searchable by keyword)",
 				Optional:            true,
 			},
@@ -152,7 +165,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Equipment zone (development, production, user acceptance testing, ..) (searchable by keyword)",
 				Optional:            true,
 			},
-			"hoste_type": schema.StringAttribute{
+			"host_type": schema.StringAttribute{
 				MarkdownDescription: "Equipment type (virtual, physical) (searchable by keyword)",
 				Optional:            true,
 			},
@@ -203,11 +216,6 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Host addresses",
 				Optional:            true,
 			},
-			"certificate_template": schema.StringAttribute{
-				MarkdownDescription: "Name of the certificate template used for certificate authentication for this host",
-				Optional:            true,
-			},
-
 			"services": schema.SingleNestedAttribute{
 				MarkdownDescription: "Host services",
 				Optional:            true,
@@ -225,7 +233,7 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 						MarkdownDescription: "Service address, IPv4, IPv6 or FQDN",
 						Optional:            true,
 					},
-					"port": schema.Int64Attribute{
+					"port": schema.NumberAttribute{
 						MarkdownDescription: "Service port",
 						Optional:            true,
 					},
@@ -233,9 +241,42 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 						MarkdownDescription: `Identifies the source of the services object "UI", "SCIM" or "SCAN". Deploy is also treated as "UI.`,
 						Optional:            true,
 					},
-					"use_for_password_rotation": schema.BoolAttribute{
-						MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
-						Optional:            true,
+					// "use_for_password_rotation": schema.BoolAttribute{
+					// 	MarkdownDescription: "if service SSH, informs whether this service is used to rotate password",
+					// 	Optional:            true,
+					// },
+				},
+			},
+			"status": schema.SetNestedAttribute{
+				MarkdownDescription: "Status array of object // PrivX API doc not clear about this",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"k": schema.StringAttribute{
+							MarkdownDescription: "k",
+							Optional:            true,
+						},
+						"v": schema.BoolAttribute{
+							MarkdownDescription: "v",
+							Optional:            true,
+						},
+
+					},
+				},
+			},
+			"ssh_host_public_keys": schema.SetNestedAttribute{
+				MarkdownDescription: "What principals (target server user names/ accounts) the host has",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							MarkdownDescription: "Host public key, used to verify the identity of the accessed host",
+							Optional:            true,
+						},
+						"fingerprint": schema.BoolAttribute{
+							MarkdownDescription: "The host-key fingerprint",
+							Optional:            true,
+						},
 					},
 				},
 			},
@@ -278,6 +319,10 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 										MarkdownDescription: "Role UUID",
 										Optional:            true,
 									},
+									"name": schema.StringAttribute{
+										MarkdownDescription: "Role name",
+										Optional:            true,
+									},
 								},
 							},
 						},
@@ -301,220 +346,220 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"service_option": schema.SingleNestedAttribute{
-							MarkdownDescription: "Object for service options",
-							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"ssh": schema.SingleNestedAttribute{
-									MarkdownDescription: "SSH service options",
-									Optional:            true,
-									Attributes: map[string]schema.Attribute{
-										"shell": schema.BoolAttribute{
-											MarkdownDescription: "Shell channel",
-											Optional:            true,
-										},
-										"file_transfer": schema.BoolAttribute{
-											MarkdownDescription: "File transfer channel",
-											Optional:            true,
-										},
-										"exec": schema.BoolAttribute{
-											MarkdownDescription: "exec_channel",
-											Optional:            true,
-										},
-										"tunnels": schema.BoolAttribute{
-											MarkdownDescription: "tunnels",
-											Optional:            true,
-										},
-										"x11": schema.BoolAttribute{
-											MarkdownDescription: "x11",
-											Optional:            true,
-										},
-										"other": schema.BoolAttribute{
-											MarkdownDescription: "other options",
-											Optional:            true,
-										},
-									},
-								},
-								"rdp": schema.SingleNestedAttribute{
-									MarkdownDescription: "SSH service options",
-									Optional:            true,
-									Attributes: map[string]schema.Attribute{
-										"file_transfer": schema.BoolAttribute{
-											MarkdownDescription: "File transfer channel",
-											Optional:            true,
-										},
-										"audio": schema.BoolAttribute{
-											MarkdownDescription: "audio",
-											Optional:            true,
-										},
-										"clipboard": schema.BoolAttribute{
-											MarkdownDescription: "clipboard",
-											Optional:            true,
-										},
-										"web": schema.BoolAttribute{
-											MarkdownDescription: "WEB service options",
-											Optional:            true,
-										},
-									},
-								},
-								"web": schema.SingleNestedAttribute{
-									MarkdownDescription: "SSH service options",
-									Optional:            true,
-									Attributes: map[string]schema.Attribute{
-										"file_transfer": schema.BoolAttribute{
-											MarkdownDescription: "File transfer channel",
-											Optional:            true,
-										},
-										"audio": schema.BoolAttribute{
-											MarkdownDescription: "audio",
-											Optional:            true,
-										},
-										"clipboard": schema.BoolAttribute{
-											MarkdownDescription: "clipboard",
-											Optional:            true,
-										},
-									},
-								},
-							},
-						},
-						"command_restrictions": schema.SingleNestedAttribute{
-							MarkdownDescription: "Host services",
-							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"enabled": schema.BoolAttribute{
-									MarkdownDescription: "Are command restrictions enabled",
-									Optional:            true,
-								},
-								"default_whitelist": schema.SingleNestedAttribute{
-									MarkdownDescription: "Default whitelist handle, required if command restrictions are enabled",
-									Optional:            true,
-									Attributes: map[string]schema.Attribute{
-										"id": schema.StringAttribute{
-											MarkdownDescription: "Whitelist ID",
-											Required:            true,
-										},
-										"name": schema.StringAttribute{
-											MarkdownDescription: "Whitelist name",
-											Optional:            true,
-										},
-										"deleted": schema.BoolAttribute{
-											MarkdownDescription: "Has whitelist been deleted, ignored in requests",
-											Optional:            true,
-										},
-									},
-								},
-								"rshell_variant": schema.StringAttribute{
-									MarkdownDescription: "Restricted shell variant, required if command restrictions are enabled",
-									Optional:            true,
-									Validators: []validator.String{
-										// These are example validators from terraform-plugin-framework-validators
-										stringvalidator.OneOf("bash", "posix"),
-									},
-								},
-								"banner": schema.StringAttribute{
-									MarkdownDescription: "Optional banner displayed in SSH terminal",
-									Optional:            true,
-								},
-								"allow_no_match": schema.BoolAttribute{
-									MarkdownDescription: "If true then commands that do not match any whitelist pattern are allowed to execute",
-									Optional:            true,
-								},
-								"audit_match": schema.BoolAttribute{
-									MarkdownDescription: "If true then an audit event is generated for every allowed command",
-									Optional:            true,
-								},
-								"audit_no_match": schema.BoolAttribute{
-									MarkdownDescription: "If true then an audit event is generated for every disallowed command",
-									Optional:            true,
-								},
-								"whitelists": schema.SetNestedAttribute{
-									Optional: true,
-									NestedObject: schema.NestedAttributeObject{
-										Attributes: map[string]schema.Attribute{
-											"whitelist": schema.SingleNestedAttribute{
-												Optional: true,
-												Attributes: map[string]schema.Attribute{
-													"id": schema.StringAttribute{
-														MarkdownDescription: "Whitelist ID",
-														Required:            true,
-													},
-													"name": schema.StringAttribute{
-														MarkdownDescription: "Whitelist name",
-														Optional:            true,
-													},
+						// "service_option": schema.SingleNestedAttribute{
+						// 	MarkdownDescription: "Object for service options",
+						// 	Optional:            true,
+						// 	Attributes: map[string]schema.Attribute{
+						// 		"ssh": schema.SingleNestedAttribute{
+						// 			MarkdownDescription: "SSH service options",
+						// 			Optional:            true,
+						// 			Attributes: map[string]schema.Attribute{
+						// 				"shell": schema.BoolAttribute{
+						// 					MarkdownDescription: "Shell channel",
+						// 					Optional:            true,
+						// 				},
+						// 				"file_transfer": schema.BoolAttribute{
+						// 					MarkdownDescription: "File transfer channel",
+						// 					Optional:            true,
+						// 				},
+						// 				"exec": schema.BoolAttribute{
+						// 					MarkdownDescription: "exec_channel",
+						// 					Optional:            true,
+						// 				},
+						// 				"tunnels": schema.BoolAttribute{
+						// 					MarkdownDescription: "tunnels",
+						// 					Optional:            true,
+						// 				},
+						// 				"x11": schema.BoolAttribute{
+						// 					MarkdownDescription: "x11",
+						// 					Optional:            true,
+						// 				},
+						// 				"other": schema.BoolAttribute{
+						// 					MarkdownDescription: "other options",
+						// 					Optional:            true,
+						// 				},
+						// 			},
+						// 		},
+						// 		"rdp": schema.SingleNestedAttribute{
+						// 			MarkdownDescription: "SSH service options",
+						// 			Optional:            true,
+						// 			Attributes: map[string]schema.Attribute{
+						// 				"file_transfer": schema.BoolAttribute{
+						// 					MarkdownDescription: "File transfer channel",
+						// 					Optional:            true,
+						// 				},
+						// 				"audio": schema.BoolAttribute{
+						// 					MarkdownDescription: "audio",
+						// 					Optional:            true,
+						// 				},
+						// 				"clipboard": schema.BoolAttribute{
+						// 					MarkdownDescription: "clipboard",
+						// 					Optional:            true,
+						// 				},
+						// 				"web": schema.BoolAttribute{
+						// 					MarkdownDescription: "WEB service options",
+						// 					Optional:            true,
+						// 				},
+						// 			},
+						// 		},
+						// 		"web": schema.SingleNestedAttribute{
+						// 			MarkdownDescription: "SSH service options",
+						// 			Optional:            true,
+						// 			Attributes: map[string]schema.Attribute{
+						// 				"file_transfer": schema.BoolAttribute{
+						// 					MarkdownDescription: "File transfer channel",
+						// 					Optional:            true,
+						// 				},
+						// 				"audio": schema.BoolAttribute{
+						// 					MarkdownDescription: "audio",
+						// 					Optional:            true,
+						// 				},
+						// 				"clipboard": schema.BoolAttribute{
+						// 					MarkdownDescription: "clipboard",
+						// 					Optional:            true,
+						// 				},
+						// 			},
+						// 		},
+						// 	},
+						// },
+						// "command_restrictions": schema.SingleNestedAttribute{
+						// 	MarkdownDescription: "Host services",
+						// 	Optional:            true,
+						// 	Attributes: map[string]schema.Attribute{
+						// 		"enabled": schema.BoolAttribute{
+						// 			MarkdownDescription: "Are command restrictions enabled",
+						// 			Optional:            true,
+						// 		},
+						// 		"default_whitelist": schema.SingleNestedAttribute{
+						// 			MarkdownDescription: "Default whitelist handle, required if command restrictions are enabled",
+						// 			Optional:            true,
+						// 			Attributes: map[string]schema.Attribute{
+						// 				"id": schema.StringAttribute{
+						// 					MarkdownDescription: "Whitelist ID",
+						// 					Required:            true,
+						// 				},
+						// 				"name": schema.StringAttribute{
+						// 					MarkdownDescription: "Whitelist name",
+						// 					Optional:            true,
+						// 				},
+						// 				"deleted": schema.BoolAttribute{
+						// 					MarkdownDescription: "Has whitelist been deleted, ignored in requests",
+						// 					Optional:            true,
+						// 				},
+						// 			},
+						// 		},
+						// 		"rshell_variant": schema.StringAttribute{
+						// 			MarkdownDescription: "Restricted shell variant, required if command restrictions are enabled",
+						// 			Optional:            true,
+						// 			Validators: []validator.String{
+						// 				// These are example validators from terraform-plugin-framework-validators
+						// 				stringvalidator.OneOf("bash", "posix"),
+						// 			},
+						// 		},
+						// 		"banner": schema.StringAttribute{
+						// 			MarkdownDescription: "Optional banner displayed in SSH terminal",
+						// 			Optional:            true,
+						// 		},
+						// 		"allow_no_match": schema.BoolAttribute{
+						// 			MarkdownDescription: "If true then commands that do not match any whitelist pattern are allowed to execute",
+						// 			Optional:            true,
+						// 		},
+						// 		"audit_match": schema.BoolAttribute{
+						// 			MarkdownDescription: "If true then an audit event is generated for every allowed command",
+						// 			Optional:            true,
+						// 		},
+						// 		"audit_no_match": schema.BoolAttribute{
+						// 			MarkdownDescription: "If true then an audit event is generated for every disallowed command",
+						// 			Optional:            true,
+						// 		},
+						// 		"whitelists": schema.SetNestedAttribute{
+						// 			Optional: true,
+						// 			NestedObject: schema.NestedAttributeObject{
+						// 				Attributes: map[string]schema.Attribute{
+						// 					"whitelist": schema.SingleNestedAttribute{
+						// 						Optional: true,
+						// 						Attributes: map[string]schema.Attribute{
+						// 							"id": schema.StringAttribute{
+						// 								MarkdownDescription: "Whitelist ID",
+						// 								Required:            true,
+						// 							},
+						// 							"name": schema.StringAttribute{
+						// 								MarkdownDescription: "Whitelist name",
+						// 								Optional:            true,
+						// 							},
 
-													"deleted": schema.BoolAttribute{
-														MarkdownDescription: "Has whitelist been deleted, ignored in requests",
-														Optional:            true,
-													},
-												},
-											},
-											"roles": schema.SetNestedAttribute{
-												MarkdownDescription: "List of roles granting access to the whitelist",
-												Optional:            true,
+						// 							"deleted": schema.BoolAttribute{
+						// 								MarkdownDescription: "Has whitelist been deleted, ignored in requests",
+						// 								Optional:            true,
+						// 							},
+						// 						},
+						// 					},
+						// 					"roles": schema.SetNestedAttribute{
+						// 						MarkdownDescription: "List of roles granting access to the whitelist",
+						// 						Optional:            true,
 
-												NestedObject: schema.NestedAttributeObject{
-													Attributes: map[string]schema.Attribute{
-														"id": schema.StringAttribute{
-															MarkdownDescription: "Role ID",
-															Required:            true,
-														},
-														"name": schema.StringAttribute{
-															MarkdownDescription: "Role Name",
-															Optional:            true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"password_rotation_enabled": schema.BoolAttribute{
-							MarkdownDescription: "set, if there are accounts, in which passwords need to be rotated",
-							Optional:            true,
-						},
-						"password_rotation": schema.SingleNestedAttribute{
-							MarkdownDescription: "password rotation settings for host",
-							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"use_main_account": schema.BoolAttribute{
-									MarkdownDescription: "rotate passwords of all accounts in host through one account",
-									Required:            true,
-								},
-								"operating_system": schema.StringAttribute{
-									MarkdownDescription: "Bash for Linux, Powershell for windows for shell access (LINUX | WINDOWS)",
-									Required:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("LINUX", "WINDOWS"),
-									},
-								},
-								"winrm_address": schema.StringAttribute{
-									MarkdownDescription: "IPv4 address or FQDN to use for winrm connection",
-									Optional:            true,
-								},
-								"winrm_port": schema.Int64Attribute{
-									MarkdownDescription: "port to use for password rotation with winrm, zero for winrm default",
-									Optional:            true,
-								},
-								"protocol": schema.StringAttribute{
-									MarkdownDescription: "protocol (SSH | WINRM)",
-									Required:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("SSH", "WINRM"),
-									},
-								},
-								"password_policy_id": schema.StringAttribute{
-									MarkdownDescription: "password policy to be applied",
-									Required:            true,
-								},
-								"script_template_id": schema.StringAttribute{
-									MarkdownDescription: "script template to be run in host",
-									Required:            true,
-								},
-							},
-						},
+						// 						NestedObject: schema.NestedAttributeObject{
+						// 							Attributes: map[string]schema.Attribute{
+						// 								"id": schema.StringAttribute{
+						// 									MarkdownDescription: "Role ID",
+						// 									Required:            true,
+						// 								},
+						// 								"name": schema.StringAttribute{
+						// 									MarkdownDescription: "Role Name",
+						// 									Optional:            true,
+						// 								},
+						// 							},
+						// 						},
+						// 					},
+						// 				},
+						// 			},
+						// 		},
+						// 	},
+						// },
+						// "password_rotation_enabled": schema.BoolAttribute{
+						// 	MarkdownDescription: "set, if there are accounts, in which passwords need to be rotated",
+						// 	Optional:            true,
+						// },
+						// "password_rotation": schema.SingleNestedAttribute{
+						// 	MarkdownDescription: "password rotation settings for host",
+						// 	Optional:            true,
+						// 	Attributes: map[string]schema.Attribute{
+						// 		"use_main_account": schema.BoolAttribute{
+						// 			MarkdownDescription: "rotate passwords of all accounts in host through one account",
+						// 			Required:            true,
+						// 		},
+						// 		"operating_system": schema.StringAttribute{
+						// 			MarkdownDescription: "Bash for Linux, Powershell for windows for shell access (LINUX | WINDOWS)",
+						// 			Required:            true,
+						// 			Validators: []validator.String{
+						// 				stringvalidator.OneOf("LINUX", "WINDOWS"),
+						// 			},
+						// 		},
+						// 		"winrm_address": schema.StringAttribute{
+						// 			MarkdownDescription: "IPv4 address or FQDN to use for winrm connection",
+						// 			Optional:            true,
+						// 		},
+						// 		"winrm_port": schema.Int64Attribute{
+						// 			MarkdownDescription: "port to use for password rotation with winrm, zero for winrm default",
+						// 			Optional:            true,
+						// 		},
+						// 		"protocol": schema.StringAttribute{
+						// 			MarkdownDescription: "protocol (SSH | WINRM)",
+						// 			Required:            true,
+						// 			Validators: []validator.String{
+						// 				stringvalidator.OneOf("SSH", "WINRM"),
+						// 			},
+						// 		},
+						// 		"password_policy_id": schema.StringAttribute{
+						// 			MarkdownDescription: "password policy to be applied",
+						// 			Required:            true,
+						// 		},
+						// 		"script_template_id": schema.StringAttribute{
+						// 			MarkdownDescription: "script template to be run in host",
+						// 			Required:            true,
+						// 		},
+						// 	},
+						// },
 					},
 				},
 			},
