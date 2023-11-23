@@ -13,21 +13,176 @@ Host resource
 ## Example Usage
 
 ```terraform
-//provider "privx" {
-//}
-
 resource "privx_host" "foo" {
-  access_group_id       = ""
+  access_group_id       = "565381ce-0911-4ba8-8606-8eecd8074556"
   external_id           = ""
   instance_id           = ""
-  source_id             = ""
   common_name           = "test-dev-provider"
   contact_address       = ""
-  cloud_provider_id     = ""
+  cloud_provider        = ""
   cloud_provider_region = ""
-  tags                  = [""]
-  addresses             = ["10.10.10.10"]
+  distinguished_name    = ""
+  organization          = ""
+  organizational_unit   = ""
+  zone                  = ""
+  host_type             = ""
+  host_classification   = ""
+  comment               = ""
+  tofu                  = false
+  stand_alone_host      = false
+  audit_enabled         = false
+  scope                 = ["foo"]
+  tags                  = ["foo"]
+  addresses             = ["0.0.0.0"]
+  ssh_host_public_keys = [
+    {
+      key = "" # Must be a valid format
+    }
+  ]
+
+  services = [
+    {
+      service = "SSH" # SSH | RDP | VNC | HTTP | HTTPS
+      address = "0.0.0.0"
+      port    = 22
+    }
+  ]
+
+  principals = [
+    {
+      principal        = "foo"
+      passphrase       = "bar"
+      use_user_account = false
+      roles = [
+        {
+          id = "1fb15cfa-6137-4821-b60c-ffc0ba11bb86"
+        }
+      ]
+    }
+  ]
 }
+
+#resource "privx_host" "foo" {
+#  access_group_id       = "565381ce-0911-4ba8-8606-8eecd8074556"
+#  external_id           = ""
+#  instance_id           = ""
+#  common_name           = "test-dev-provider"
+#  contact_address       = ""
+#  cloud_provider        = ""
+#  cloud_provider_region = ""
+#  distinguished_name    = ""
+#  organization          = ""
+#  organizational_unit   = ""
+#  zone                  = ""
+#  host_type             = ""
+#  host_classification   = ""
+#  comment               = ""
+#  tofu                  = false
+#  stand_alone_host      = false
+#  audit_enabled         = false
+#  scope                 = []
+#  tags                  = []
+#  addresses             = []
+#
+#  #  certificate_template  = "" # FIXME: not implemented in privx-sdk-go v1.29
+#  #  host_certificate_raw  = "" # FIXME: not implemented in privx-sdk-go v1.29
+#  #  use_for_password_rotation = false # FIXME: not implemented in privx-sdk-go v1.29
+#
+#  ssh_host_public_keys = [
+#    {
+#      key = "" # Must be a valid format
+#    }
+#  ]
+#
+#  services = [
+#    {
+#      service = "SSH" # SSH | RDP | VNC | HTTP | HTTPS
+#      address = "0.0.0.0"
+#      port    = 22
+#      #     use_for_password_rotation = false # FIXME: not implemented in privx-sdk-go v1.29
+#    }
+#  ]
+#
+#  principals = [
+#    {
+#      principal = "examplename"
+#      # rotate                    = false # FIXME: not implemented in privx-sdk-go v1.29
+#      # use_for_password_rotation = false # FIXME: not implemented in privx-sdk-go v1.29
+#      use_user_account = false
+#      passphrase       = "toto"
+#      roles = [
+#        {
+#          id = "1fb15cfa-6137-4821-b60c-ffc0ba11bb86"
+#        }
+#      ]
+#      #applications = [ # FIXME: not implemented in privx-sdk-go v1.29
+#      #  {
+#      #    name = "example-application"
+#      #    # application       = "" # FIXME: not implemented in privx-sdk-go v1.29
+#      #    # arguments         = "" # FIXME: not implemented in privx-sdk-go v1.29
+#      #    # working_directory = "" # FIXME: not implemented in privx-sdk-go v1.29
+#      #  }
+#      #]
+#      #service_options = { # FIXME: not implemented in privx-sdk-go v1.29
+#      #  ssh = {
+#      #    shell         = false
+#      #    file_transfer = false
+#      #    exec          = false
+#      #    tunnels       = false
+#      #    x11           = false
+#      #    other         = false
+#      #  }
+#      #  rdp = {
+#      #    file_transfer = false
+#      #    audio         = false
+#      #    clipboard     = false
+#      #    web           = false
+#      #  }
+#      #  web = {
+#      #    file_transfer = false
+#      #    audio         = false
+#      #    clipboard     = false
+#      #  }
+#      #}
+#      #command_restrictions = { # FIXME: not implemented in privx-sdk-go v1.29
+#      #  enabled = false
+#      #  default_whitelist = {
+#      #    id      = ""
+#      #    name    = ""
+#      #    deleted = ""
+#      #  }
+#      #  rshell_variant = "" # bash | posix
+#      #  banner         = ""
+#      #  allow_no_match = false
+#      #  audit_match    = false
+#      #  audit_no_match = false
+#      #  whitelists = [
+#      #    {
+#      #      whitelist = {
+#      #        id   = ""
+#      #        name = ""
+#      #      }
+#      #      roles = [
+#      #        {
+#      #          id   = ""
+#      #          name = ""
+#      #        }
+#      #      ]
+#      #    }
+#      #  ]
+#      #}
+#    }
+#  ]
+#  # password_rotation = { # FIXME: not implemented in privx-sdk-go v1.29
+#  #   use_main_account   = true
+#  #   operating_system   = "LINUX" # LINUX | WINDOWS
+#  #   winrm_address      = ""
+#  #   winrm_port         = 0
+#  #   protocol           = "SSH" # SSH | WINRM
+#  #   password_policy_id = ""
+#  #   script_template_id = ""
+#  # }
+#}
 ```
 
 <!-- schema generated by tfplugindocs -->
@@ -36,29 +191,26 @@ resource "privx_host" "foo" {
 ### Optional
 
 - `access_group_id` (String) Defines host's access group
-- `addresses` (List of String) Host addresses
+- `addresses` (Set of String) Host addresses
 - `audit_enabled` (Boolean) Whether the host is set to be audited
-- `certificate_template` (String) Name of the certificate template used for certificate authentication for this host
 - `cloud_provider` (String) The cloud provider the host resides in
 - `cloud_provider_region` (String) The cloud provider region the host resides in
 - `comment` (String) A comment describing the host
 - `common_name` (String) X.500 Common name (searchable by keyword)
 - `contact_address` (String) The host public address scanning script instructs the host store to use in service address-field.
-- `deployable` (Boolean) Whether the host is writable through /deploy end point with deployment credentials
-- `disabled` (String) disabled ("BY_ADMIN" | "BY_LISCENCE" | "false")
 - `distinguished_name` (String) LDAPv3 Disinguished name (searchable by keyword)
 - `external_id` (String) The equipment ID from the originating equipment store
 - `host_classification` (String) Classification (Windows desktop, Windows server, AIX, Linux RH, ..) (searchable by keyword)
-- `hoste_type` (String) Equipment type (virtual, physical) (searchable by keyword)
+- `host_type` (String) Equipment type (virtual, physical) (searchable by keyword)
 - `instance_id` (String) The instance ID from the originating cloud service (searchable by keyword)
 - `organization` (String) X.500 Organization (searchable by keyword)
-- `organization_unit` (String) X.500 Organizational unit (searchable by keyword)
+- `organizational_unit` (String) X.500 Organizational unit (searchable by keyword)
 - `principals` (Attributes Set) What principals (target server user names/ accounts) the host has (see [below for nested schema](#nestedatt--principals))
-- `scope` (List of String) Under what compliance scopes the listed equipment falls under (searchable by keyword)
-- `services` (Attributes) Host services (see [below for nested schema](#nestedatt--services))
-- `source_id` (String) A unique import-source identifier for the host entry, for example a hash for AWS account ID. (searchable by keyword)
+- `scope` (Set of String) Under what compliance scopes the listed equipment falls under (searchable by keyword)
+- `services` (Attributes Set) Host services (see [below for nested schema](#nestedatt--services))
+- `ssh_host_public_keys` (Attributes Set) Host public keys, used to verify the identity of the accessed host (see [below for nested schema](#nestedatt--ssh_host_public_keys))
 - `stand_alone_host` (Boolean) Indicates it is a standalone host - bound to local host directory
-- `tags` (List of String) Host tags
+- `tags` (Set of String) Host tags
 - `tofu` (Boolean) Whether the host key should be accepted and stored on first connection
 - `zone` (String) Equipment zone (development, production, user acceptance testing, ..) (searchable by keyword)
 
@@ -69,110 +221,15 @@ resource "privx_host" "foo" {
 <a id="nestedatt--principals"></a>
 ### Nested Schema for `principals`
 
-Optional:
+Required:
 
-- `applications` (Attributes Set) An array of application the principal may launch on the target host (see [below for nested schema](#nestedatt--principals--applications))
-- `command_restrictions` (Attributes) Host services (see [below for nested schema](#nestedatt--principals--command_restrictions))
-- `passphrase` (String) The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit
-- `password_rotation` (Attributes) password rotation settings for host (see [below for nested schema](#nestedatt--principals--password_rotation))
-- `password_rotation_enabled` (Boolean) set, if there are accounts, in which passwords need to be rotated
 - `principal` (String) The account name
+
+Optional:
+
+- `passphrase` (String) The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit
 - `roles` (Attributes Set) An array of roles entitled to access this principal on the host (see [below for nested schema](#nestedatt--principals--roles))
-- `rotate` (Boolean) Rotate password of this account
-- `service_option` (Attributes) Object for service options (see [below for nested schema](#nestedatt--principals--service_option))
-- `source` (String) Identifies the source of the principals object "UI" or "SCAN". Deploy is also treated as "UI"
-- `use_for_password_rotation` (Boolean) marks account to be used as the account through which password rotation takes place, when flag use_main_account set in rotation_metadata
-- `use_user_account` (String) Use user account as host principal name
-
-<a id="nestedatt--principals--applications"></a>
-### Nested Schema for `principals.applications`
-
-Optional:
-
-- `application` (String)
-- `arguments` (String)
-- `name` (String)
-- `working_directory` (String)
-
-
-<a id="nestedatt--principals--command_restrictions"></a>
-### Nested Schema for `principals.command_restrictions`
-
-Optional:
-
-- `allow_no_match` (Boolean) If true then commands that do not match any whitelist pattern are allowed to execute
-- `audit_match` (Boolean) If true then an audit event is generated for every allowed command
-- `audit_no_match` (Boolean) If true then an audit event is generated for every disallowed command
-- `banner` (String) Optional banner displayed in SSH terminal
-- `default_whitelist` (Attributes) Default whitelist handle, required if command restrictions are enabled (see [below for nested schema](#nestedatt--principals--command_restrictions--default_whitelist))
-- `enabled` (Boolean) Are command restrictions enabled
-- `rshell_variant` (String) Restricted shell variant, required if command restrictions are enabled
-- `whitelists` (Attributes Set) (see [below for nested schema](#nestedatt--principals--command_restrictions--whitelists))
-
-<a id="nestedatt--principals--command_restrictions--default_whitelist"></a>
-### Nested Schema for `principals.command_restrictions.default_whitelist`
-
-Required:
-
-- `id` (String) Whitelist ID
-
-Optional:
-
-- `deleted` (Boolean) Has whitelist been deleted, ignored in requests
-- `name` (String) Whitelist name
-
-
-<a id="nestedatt--principals--command_restrictions--whitelists"></a>
-### Nested Schema for `principals.command_restrictions.whitelists`
-
-Optional:
-
-- `roles` (Attributes Set) List of roles granting access to the whitelist (see [below for nested schema](#nestedatt--principals--command_restrictions--whitelists--roles))
-- `whitelist` (Attributes) (see [below for nested schema](#nestedatt--principals--command_restrictions--whitelists--whitelist))
-
-<a id="nestedatt--principals--command_restrictions--whitelists--roles"></a>
-### Nested Schema for `principals.command_restrictions.whitelists.whitelist`
-
-Required:
-
-- `id` (String) Role ID
-
-Optional:
-
-- `name` (String) Role Name
-
-
-<a id="nestedatt--principals--command_restrictions--whitelists--whitelist"></a>
-### Nested Schema for `principals.command_restrictions.whitelists.whitelist`
-
-Required:
-
-- `id` (String) Whitelist ID
-
-Optional:
-
-- `deleted` (Boolean) Has whitelist been deleted, ignored in requests
-- `name` (String) Whitelist name
-
-
-
-
-<a id="nestedatt--principals--password_rotation"></a>
-### Nested Schema for `principals.password_rotation`
-
-Required:
-
-- `operating_system` (String) Bash for Linux, Powershell for windows for shell access (LINUX | WINDOWS)
-- `password_policy_id` (String) password policy to be applied
-- `protocol` (String) protocol (SSH | WINRM)
-- `script_template_id` (String) script template to be run in host
-- `use_main_account` (Boolean) rotate passwords of all accounts in host through one account
-
-Optional:
-
-- `winrm_address` (String) IPv4 address or FQDN to use for winrm connection
-- `winrm_port` (Number) port to use for password rotation with winrm, zero for winrm default
-
+- `use_user_account` (Boolean) Use user account as host principal name
 
 <a id="nestedatt--principals--roles"></a>
 ### Nested Schema for `principals.roles`
@@ -180,50 +237,6 @@ Optional:
 Optional:
 
 - `id` (String) Role UUID
-
-
-<a id="nestedatt--principals--service_option"></a>
-### Nested Schema for `principals.service_option`
-
-Optional:
-
-- `rdp` (Attributes) SSH service options (see [below for nested schema](#nestedatt--principals--service_option--rdp))
-- `ssh` (Attributes) SSH service options (see [below for nested schema](#nestedatt--principals--service_option--ssh))
-- `web` (Attributes) SSH service options (see [below for nested schema](#nestedatt--principals--service_option--web))
-
-<a id="nestedatt--principals--service_option--rdp"></a>
-### Nested Schema for `principals.service_option.rdp`
-
-Optional:
-
-- `audio` (Boolean) audio
-- `clipboard` (Boolean) clipboard
-- `file_transfer` (Boolean) File transfer channel
-- `web` (Boolean) WEB service options
-
-
-<a id="nestedatt--principals--service_option--ssh"></a>
-### Nested Schema for `principals.service_option.ssh`
-
-Optional:
-
-- `exec` (Boolean) exec_channel
-- `file_transfer` (Boolean) File transfer channel
-- `other` (Boolean) other options
-- `shell` (Boolean) Shell channel
-- `tunnels` (Boolean) tunnels
-- `x11` (Boolean) x11
-
-
-<a id="nestedatt--principals--service_option--web"></a>
-### Nested Schema for `principals.service_option.web`
-
-Optional:
-
-- `audio` (Boolean) audio
-- `clipboard` (Boolean) clipboard
-- `file_transfer` (Boolean) File transfer channel
-
 
 
 
@@ -235,5 +248,11 @@ Optional:
 - `address` (String) Service address, IPv4, IPv6 or FQDN
 - `port` (Number) Service port
 - `service` (String) Allowed protocol - SSH, RDP, VNC, HTTP, HTTPS (searchable)
-- `source` (String) Identifies the source of the services object "UI", "SCIM" or "SCAN". Deploy is also treated as "UI.
-- `use_for_password_rotation` (Boolean) if service SSH, informs whether this service is used to rotate password
+
+
+<a id="nestedatt--ssh_host_public_keys"></a>
+### Nested Schema for `ssh_host_public_keys`
+
+Optional:
+
+- `key` (String) Host public key, used to verify the identity of the accessed host
