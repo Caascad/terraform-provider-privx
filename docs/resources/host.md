@@ -227,7 +227,7 @@ Required:
 
 Optional:
 
-- `passphrase` (String) The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit
+- `passphrase` (String, Sensitive) The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit
 - `roles` (Attributes Set) An array of roles entitled to access this principal on the host (see [below for nested schema](#nestedatt--principals--roles))
 - `use_user_account` (Boolean) Use user account as host principal name
 

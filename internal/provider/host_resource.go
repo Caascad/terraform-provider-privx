@@ -399,10 +399,8 @@ func (r *HostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							MarkdownDescription: "The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit",
 							Optional:            true,
 							Computed:            true,
-							//Sensitive:           true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+							Sensitive:           true,
+							Default:             stringdefault.StaticString(""),
 						},
 						"roles": schema.SetNestedAttribute{
 							MarkdownDescription: "An array of roles entitled to access this principal on the host",
@@ -889,7 +887,7 @@ func (r *HostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		}
 		var passphrase string
 		for _, dp := range data.Principals {
-			if !dp.Passphrase.IsNull() && !dp.Passphrase.IsUnknown() && dp.ID.ValueString() == p.ID {
+			if dp.ID.ValueString() == p.ID {
 				passphrase = dp.Passphrase.ValueString()
 			}
 		}
