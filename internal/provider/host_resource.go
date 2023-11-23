@@ -60,7 +60,7 @@ type (
 	*/
 
 	SSHServiceModel struct {
-		shell        types.Bool `tfsdk:"shell"`
+		Shell        types.Bool `tfsdk:"shell"`
 		FileTransfer types.Bool `tfsdk:"file_transfer"`
 		Exec         types.Bool `tfsdk:"exec"`
 		Tunnels      types.Bool `tfsdk:"tunnels"`
@@ -71,7 +71,7 @@ type (
 	RDPServiceModel struct {
 		FileTransfer types.Bool `tfsdk:"file_transfer"`
 		Audio        types.Bool `tfsdk:"audio"`
-		clipboard    types.Bool `tfsdk:"clipboard"`
+		Clipboard    types.Bool `tfsdk:"clipboard"`
 	}
 
 	ServiceOptionsModel struct {
@@ -115,7 +115,7 @@ type (
 		ID types.String `tfsdk:"id"`
 	}
 
-	// Principal of the target host
+	// Principal of the target host.
 	PrincipalModel struct {
 		ID             types.String           `tfsdk:"principal"`
 		Passphrase     types.String           `tfsdk:"passphrase"`
