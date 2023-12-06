@@ -17,7 +17,7 @@ provider "privx" {
 }
 
 data "privx_role" "foo" {
-  id = "550b4812-b59f-5089-7bc2-6d14973064d8"
+  name = "my_role_name_here"
 }
 ```
 
@@ -26,13 +26,13 @@ data "privx_role" "foo" {
 
 ### Required
 
-- `id` (String) Role ID
+- `name` (String) Name of the role
 
 ### Read-Only
 
 - `access_group_id` (String) Scopes host and connection permissions to an access group. (Defaults to Default access group)
 - `comment` (String) A comment describing the object
-- `name` (String) Name of the role
+- `id` (String) Role ID
 - `permissions` (Set of String) Role permissions
 - `permit_agent` (Boolean) Role permit agent
 - `principal_public_key_strings` (Set of String) List of role's principal public keys

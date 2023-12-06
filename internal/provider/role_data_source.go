@@ -39,11 +39,11 @@ func (d *RoleDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Role ID",
-				Required:            true,
+				Computed:            true,
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the role",
-				Computed:            true,
+				Required:            true,
 			},
 			"access_group_id": schema.StringAttribute{
 				MarkdownDescription: "Scopes host and connection permissions to an access group. (Defaults to Default access group)",
@@ -107,7 +107,22 @@ func (d *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	role, err := d.client.Role(data.ID.ValueString())
+	// resolve role from role name
+	role_names_as_list := []string{data.Name.ValueString()}
+	roles, err := d.client.ResolveRoles(role_names_as_list)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to resolves roles, got error: %s", err))
+		return
+	}
+
+	if len(roles) == 0 {
+		resp.Diagnostics.AddError("ResolveRoles Error", fmt.Sprintf("Could not retrieve a role from name: %s", data.Name.ValueString()))
+		return
+	}
+
+	// retrieve role from id
+	role, err := d.client.Role(roles[0].ID)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read role, got error: %s", err))
 		return
