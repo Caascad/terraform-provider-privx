@@ -66,7 +66,7 @@ Optional:
 - `address` (String) oidc connection address
 - `button_title` (String) oidc connection title
 - `client_id` (String) oidc connection client ID
-- `client_secret` (String) oidc connection client Secret
+- `client_secret` (String, Sensitive) oidc connection client Secret
 - `enabled` (Boolean) oidc connection enabled
 - `issuer` (String) oidc connection issuer
 - `tags_attribute_name` (String) oidc connection tags attribute name

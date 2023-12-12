@@ -10,9 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -83,16 +81,10 @@ func (r *SourceResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Source name",
 				Optional:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"comment": schema.StringAttribute{
 				MarkdownDescription: "Source comment",
 				Optional:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"ttl": schema.Int64Attribute{
 				MarkdownDescription: "Source ttl",
@@ -103,25 +95,16 @@ func (r *SourceResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Source enabled",
 				Optional:            true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"tags": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Source tags",
 				Optional:            true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"username_pattern": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Source external user pattern",
 				Optional:            true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"external_user_mapping": schema.ListAttribute{
 				MarkdownDescription: "Source external user mapping",
@@ -131,9 +114,6 @@ func (r *SourceResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						"source_id":           types.StringType,
 						"source_search_field": types.StringType,
 					}},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"oidc_connection": schema.SingleNestedAttribute{
 				MarkdownDescription: "OIDC connection",
@@ -142,60 +122,37 @@ func (r *SourceResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					"address": schema.StringAttribute{
 						MarkdownDescription: "oidc connection address",
 						Optional:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"enabled": schema.BoolAttribute{
 						MarkdownDescription: "oidc connection enabled",
 						Optional:            true,
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"issuer": schema.StringAttribute{
 						MarkdownDescription: "oidc connection issuer",
 						Optional:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"button_title": schema.StringAttribute{
 						MarkdownDescription: "oidc connection title",
 						Optional:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"client_id": schema.StringAttribute{
 						MarkdownDescription: "oidc connection client ID",
 						Optional:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"client_secret": schema.StringAttribute{
 						MarkdownDescription: "oidc connection client Secret",
-						Optional:            true,
 						Computed:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
+						Optional:            true,
+						Sensitive:           true,
 					},
 					"tags_attribute_name": schema.StringAttribute{
 						MarkdownDescription: "oidc connection tags attribute name",
 						Optional:            true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"additional_scopes_secret": schema.ListAttribute{
 						ElementType:         types.StringType,
 						MarkdownDescription: "oidc additional scopes secret",
 						Optional:            true,
-						PlanModifiers: []planmodifier.List{
-							listplanmodifier.UseStateForUnknown(),
-						},
 					},
 				},
 			},
@@ -346,7 +303,7 @@ func (r *SourceResource) Read(ctx context.Context, req resource.ReadRequest, res
 		ButtonTitle:       types.StringValue(source.Connection.OIDCButtonTitle),
 		Issuer:            types.StringValue(source.Connection.OIDCIssuer),
 		ClientID:          types.StringValue(source.Connection.OIDCClientID),
-		ClientSecret:      types.StringValue(source.Connection.OIDCClientSecret),
+		ClientSecret:      data.OIDCConnection.ClientSecret, // Do not update client_secret. We keep the state value since PrivX returns "*****" as password.
 		TagsAttributeName: types.StringValue(source.Connection.OIDCTagsAttributeName),
 		ScopesSecret:      scopesSecret,
 	}
@@ -415,6 +372,7 @@ func (r *SourceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	source := rolestore.Source{
+		ID:                  data.ID.ValueString(),
 		Enabled:             data.Enabled.ValueBool(),
 		TTL:                 int(data.TTL.ValueInt64()),
 		Name:                data.Name.ValueString(),
