@@ -309,8 +309,8 @@ func (d *HostDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 						},
 						"passphrase": schema.StringAttribute{
 							MarkdownDescription: "The account static passphrase or the initial rotating password value. If rotate selected, active in create, disabled/hidden in edit",
-							//Sensitive:           true,
-							Computed: true,
+							Sensitive:           true,
+							Computed:            true,
 						},
 						"source": schema.StringAttribute{
 							MarkdownDescription: `Identifies the source of the principals object "UI" or "SCAN". Deploy is also treated as "UI"`,
