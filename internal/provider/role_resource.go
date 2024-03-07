@@ -226,20 +226,29 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	tflog.Debug(ctx, fmt.Sprintf("rolestore.Role model used: %+v", role))
 
 	roleID, err := r.client.CreateRole(role)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create the role, got error: %s", err))
+		return
+	}
+
+	// generate the principal key for the role (using the role ID)
+	principalKeyID, err := r.client.GeneratePrincipalKey(roleID)
 
 	// Get role public key into state.
 	// PrivX takes some time to generate them.
-	publicKeyData := []string{"Generating Keys ..."}
+	publicKeyData := []string{}
 	timeout := 12 * time.Second
 	startTime := time.Now()
 	for {
-		roleRead, err := r.client.Role(roleID)
+		principalKeyRead, err := r.client.PrincipalKey(roleID, principalKeyID)
+
 		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read role, got error: %s", err))
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read the principal key, got error: %s", err))
 			return
 		}
-		if !strings.Contains(roleRead.PublicKey[0], "Generating keys...") {
-			publicKeyData = roleRead.PublicKey
+
+		if strings.Contains(principalKeyRead.PublicKey, "ssh-rsa ") {
+			publicKeyData = append(publicKeyData, principalKeyRead.PublicKey)
 			break
 		}
 		if time.Since(startTime) > timeout {
