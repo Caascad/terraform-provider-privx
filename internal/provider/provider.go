@@ -289,8 +289,11 @@ func (p *privxProvider) DataSources(ctx context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		NewAccessGroupDataSource,
 		NewAPIClientDataSource,
+		NewCarrierConfigDataSource,
 		NewExtenderDataSource,
 		NewExtenderConfigDataSource,
+		NewWebproxyConfigDataSource,
+		NewWebproxyDataSource,
 		NewRoleDataSource,
 		NewSecretDataSource,
 	}

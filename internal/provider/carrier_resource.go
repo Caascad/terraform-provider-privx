@@ -92,7 +92,7 @@ func (r *CarrierResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"web_proxy_address": schema.StringAttribute{
 				MarkdownDescription: "Web Proxy address",
-				Optional:            true,
+				Required:            true,
 			},
 			"web_proxy_port": schema.Int64Attribute{
 				MarkdownDescription: "Web Proxy address",
@@ -122,7 +122,7 @@ func (r *CarrierResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"group_id": schema.StringAttribute{
-				MarkdownDescription: "Access Group ID",
+				MarkdownDescription: "Group ID",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
