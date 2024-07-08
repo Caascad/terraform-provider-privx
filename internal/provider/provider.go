@@ -281,6 +281,7 @@ func (p *privxProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewSecretResource,
 		NewSourceResource,
 		NewAPIClientResource,
+		NewCarrierResource,
 	}
 }
 
