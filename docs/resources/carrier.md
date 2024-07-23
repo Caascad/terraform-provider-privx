@@ -25,7 +25,7 @@ resource "privx_carrier" "carrier-test_2" {
   ]
   web_proxy_address                 = "0.0.0.0"
   routing_prefix                    = "routing_prefix"
-  web_proxy_extender_route_patterns = ["route_patterns"]
+  web_proxy_extender_route_patterns = ["route_pattern"]
 }
 ```
 
