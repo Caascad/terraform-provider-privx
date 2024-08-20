@@ -33,20 +33,20 @@ type CarrierResource struct {
 
 // Carrier contains PrivX carrier information.
 type CarrierResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Type            types.String `tfsdk:"type"`
-	Enabled         types.Bool   `tfsdk:"enabled"`
-	RoutingPrefix   types.String `tfsdk:"routing_prefix"`
-	Name            types.String `tfsdk:"name"`
-	Permissions     types.List   `tfsdk:"permissions"`
-	WebProxyAddress types.String `tfsdk:"web_proxy_address"`
-	WebProxyPort    types.Int64  `tfsdk:"web_proxy_port"`
+	ID                            types.String `tfsdk:"id"`
+	Type                          types.String `tfsdk:"type"`
+	Enabled                       types.Bool   `tfsdk:"enabled"`
+	RoutingPrefix                 types.String `tfsdk:"routing_prefix"`
+	Name                          types.String `tfsdk:"name"`
+	Permissions                   types.List   `tfsdk:"permissions"`
+	WebProxyAddress               types.String `tfsdk:"web_proxy_address"`
+	WebProxyPort                  types.Int64  `tfsdk:"web_proxy_port"`
 	WebProxyExtenderRoutePatterns types.List   `tfsdk:"web_proxy_extender_route_patterns"`
-	ExtenderAddress types.List   `tfsdk:"extender_address"`
-	Subnets         types.List   `tfsdk:"subnets"`
-	Registered      types.Bool   `tfsdk:"registered"`
-	AccessGroupId   types.String `tfsdk:"access_group_id"`
-	GroupID	types.String `tfsdk:"group_id"`
+	ExtenderAddress               types.List   `tfsdk:"extender_address"`
+	Subnets                       types.List   `tfsdk:"subnets"`
+	Registered                    types.Bool   `tfsdk:"registered"`
+	AccessGroupId                 types.String `tfsdk:"access_group_id"`
+	GroupID                       types.String `tfsdk:"group_id"`
 }
 
 func (r *CarrierResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -67,8 +67,8 @@ func (r *CarrierResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"type": schema.StringAttribute{
 				MarkdownDescription: "Trusted client Type",
-				Computed: true,
-				Default: stringdefault.StaticString("CARRIER"),
+				Computed:            true,
+				Default:             stringdefault.StaticString("CARRIER"),
 			},
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Carrier enabled",
@@ -98,7 +98,7 @@ func (r *CarrierResource) Schema(ctx context.Context, req resource.SchemaRequest
 				MarkdownDescription: "Web Proxy address",
 				Optional:            true,
 			},
-			"web_proxy_extender_route_patterns":  schema.ListAttribute{
+			"web_proxy_extender_route_patterns": schema.ListAttribute{
 				ElementType:         types.StringType,
 				MarkdownDescription: "Web Proxy Extender Route Patterns",
 				Optional:            true,
@@ -107,6 +107,10 @@ func (r *CarrierResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType:         types.StringType,
 				MarkdownDescription: "Extender addresses",
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"subnets": schema.ListAttribute{
 				ElementType:         types.StringType,
@@ -203,17 +207,17 @@ func (r *CarrierResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	carrier := userstore.TrustedClient{
-		Type:            userstore.ClientType(data.Type.ValueString()),
-		Name:            data.Name.ValueString(),
-		Enabled:         data.Enabled.ValueBool(),
-		Permissions:     permissionPayload,
-		AccessGroupId:   data.AccessGroupId.ValueString(),
-		GroupId: data.GroupID.ValueString(),
-		ExtenderAddress: extenderAddressPayload,
-		WebProxyAddress: data.WebProxyAddress.ValueString(),
+		Type:                          userstore.ClientType(data.Type.ValueString()),
+		Name:                          data.Name.ValueString(),
+		Enabled:                       data.Enabled.ValueBool(),
+		Permissions:                   permissionPayload,
+		AccessGroupId:                 data.AccessGroupId.ValueString(),
+		GroupId:                       data.GroupID.ValueString(),
+		ExtenderAddress:               extenderAddressPayload,
+		WebProxyAddress:               data.WebProxyAddress.ValueString(),
 		WebProxyExtenderRoutePatterns: WebProxyExtenderRoutPattersPayload,
-		Subnets:         subnetsPayload,
-		RoutingPrefix:   data.RoutingPrefix.ValueString(),
+		Subnets:                       subnetsPayload,
+		RoutingPrefix:                 data.RoutingPrefix.ValueString(),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("userstore.TrustedClient model used: %+v", carrier))
@@ -250,6 +254,12 @@ func (r *CarrierResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	data.Permissions = permissions
+
+	extender_address, diags := types.ListValueFrom(ctx, data.ExtenderAddress.ElementType(ctx), carrierRead.ExtenderAddress)
+	if diags.HasError() {
+		return
+	}
+	data.ExtenderAddress = extender_address
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -342,17 +352,17 @@ func (r *CarrierResource) Update(ctx context.Context, req resource.UpdateRequest
 	permissionPayload := []string{"privx-carrier"}
 
 	carrier := userstore.TrustedClient{
-		Type:            userstore.ClientType(data.Type.ValueString()),
-		Name:            data.Name.ValueString(),
-		Enabled:         data.Enabled.ValueBool(),
-		Permissions:     permissionPayload,
-		AccessGroupId:   data.AccessGroupId.ValueString(),
-		GroupId: data.GroupID.ValueString(),
-		ExtenderAddress: extenderAddressPayload,
-		WebProxyAddress: data.WebProxyAddress.ValueString(),
+		Type:                          userstore.ClientType(data.Type.ValueString()),
+		Name:                          data.Name.ValueString(),
+		Enabled:                       data.Enabled.ValueBool(),
+		Permissions:                   permissionPayload,
+		AccessGroupId:                 data.AccessGroupId.ValueString(),
+		GroupId:                       data.GroupID.ValueString(),
+		ExtenderAddress:               extenderAddressPayload,
+		WebProxyAddress:               data.WebProxyAddress.ValueString(),
 		WebProxyExtenderRoutePatterns: WebProxyExtenderRoutPattersPayload,
-		Subnets:         subnetsPayload,
-		RoutingPrefix:   data.RoutingPrefix.ValueString(),
+		Subnets:                       subnetsPayload,
+		RoutingPrefix:                 data.RoutingPrefix.ValueString(),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("userstore.TrustedClient model used: %+v", carrier))
