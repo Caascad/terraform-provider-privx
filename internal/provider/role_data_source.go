@@ -145,15 +145,6 @@ func (d *RoleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 	data.PublicKey = publicKey
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to read Resource",
-			"Cannot marshal sourceRule data to SourceRule object.\n"+
-				err.Error(),
-		)
-		return
-	}
-
 	sourceRuleData, err := json.Marshal(role.SourceRule)
 	if err != nil {
 		resp.Diagnostics.AddError(

@@ -3,15 +3,13 @@ module terraform-provider-privx
 go 1.20
 
 require (
-	github.com/SSHcom/privx-sdk-go v1.29.0
+	github.com/SSHcom/privx-sdk-go v1.35.1
 	github.com/hashicorp/terraform-plugin-docs v0.15.0
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
 	github.com/hashicorp/terraform-plugin-go v0.20.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 )
-
-replace github.com/SSHcom/privx-sdk-go => github.com/Caascad/privx-sdk-go v0.0.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
@@ -23,7 +21,6 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.1 // indirect
