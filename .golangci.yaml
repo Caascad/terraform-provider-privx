@@ -1,12 +1,11 @@
 # Visit https://golangci-lint.run/ for usage documentation
 # and information on other useful linters
-run:
-  skip-files:
-    - internal/provider/provider_test.go
-  skip-dirs:
-    - vendor$
 
 issues:
+  exclude-files:
+    - internal/provider/provider_test.go
+  exclude-dirs:
+    - vendor$
   max-per-linter: 0
   max-same-issues: 0
 
@@ -15,7 +14,6 @@ linters:
   enable:
     - durationcheck
     - errcheck
-    - exportloopref
     - forcetypeassert
     - godot
     - gofmt
@@ -30,4 +28,4 @@ linters:
     - unconvert
     - unparam
     - unused
-    - vet
+    - govet
