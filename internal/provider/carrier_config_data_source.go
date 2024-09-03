@@ -28,7 +28,7 @@ type CarrierConfigDataSource struct {
 // CarrierConfig contains PrivX CarrierConfig information.
 type CarrierConfigDataSourceModel struct {
 	TrustedClientID types.String `tfsdk:"trusted_client_id"`
-	CarrierConfig  types.String `tfsdk:"carrier_config"`
+	CarrierConfig   types.String `tfsdk:"carrier_config"`
 }
 
 func (r *CarrierConfigDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

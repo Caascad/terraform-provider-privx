@@ -140,15 +140,15 @@ func (r *WebproxyDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var Client userstore.TrustedClient
-	found_client:= false
+	found_client := false
 
 	for _, client := range trustedClientList {
-        if client.GroupId == data.GroupId.ValueString() && client.Type == "ICAP" {
-			found_client=true
-			Client=client
-            break  // Arrêtez la boucle dès que vous trouvez la bonne valeur
-        }
-    }
+		if client.GroupId == data.GroupId.ValueString() && client.Type == "ICAP" {
+			found_client = true
+			Client = client
+			break // Arrêtez la boucle dès que vous trouvez la bonne valeur
+		}
+	}
 	if !found_client {
 		resp.Diagnostics.AddError("Proxy Error", fmt.Sprintf("Unable to find associated WebProxy, got error: %s", data.GroupId.ValueString()))
 		return
