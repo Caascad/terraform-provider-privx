@@ -12,7 +12,7 @@ See examples (`examples/`) and generated documentation (`docs/`),
 ### Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.20
+- [Go](https://golang.org/doc/install) >= 1.21
 
 Optionnal
 - [Nix](https://github.com/NixOS/nix) >= 2.15.0
