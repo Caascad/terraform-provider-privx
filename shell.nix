@@ -6,6 +6,6 @@ in pkgs.mkShell {
     terraform_1
     git
     makeWrapper
-    go_1_20
+    go_1_21
   ];
 }
