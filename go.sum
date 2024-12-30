@@ -14,8 +14,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/ProtonMail/go-crypto v1.1.0-alpha.2 h1:bkyFVUP+ROOARdgCiJzNQo2V2kiB97LyUpzH9P6Hrlg=
 github.com/ProtonMail/go-crypto v1.1.0-alpha.2/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
-github.com/SSHcom/privx-sdk-go v1.35.1 h1:/5bqR11cxDfiFlZvgPij/eGWKomzuiOvcJKpK5ltYVk=
-github.com/SSHcom/privx-sdk-go v1.35.1/go.mod h1:8fUcouMBX54uARVPAvYjIgGMPHXZ9T5/qbUFHmjGmSQ=
+github.com/SSHcom/privx-sdk-go v1.37.0 h1:0kN6VLpsS/mj/3WMBFHdrVaOWas5+U8RggF179hiHoY=
+github.com/SSHcom/privx-sdk-go v1.37.0/go.mod h1:8fUcouMBX54uARVPAvYjIgGMPHXZ9T5/qbUFHmjGmSQ=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
