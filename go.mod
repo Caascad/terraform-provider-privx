@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.13
 
 require (
-	github.com/SSHcom/privx-sdk-go v1.35.1
+	github.com/SSHcom/privx-sdk-go v1.37.0
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
